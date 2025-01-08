@@ -1,0 +1,12 @@
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/service/EccnServiceTest.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/service/CryptoClassificationServiceTest.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/service/DocumentRecordServiceTest.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/config/TestConfig.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/EccnManagementServiceApplicationTests.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/LoadBalancerTest.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/service/AutomatedClassificationToolServiceTest.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/CircuitBreakerTest.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/config/CircuitBreakerTestConfig.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/service/IntegrationServiceTest.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/config/LoadBalancerTestConfig.java
+/home/username01/IdeaProjects/eccn-management-service/src/test/java/com/aciworldwide/eccn_management_service/config/MongoDBTestConfig.java

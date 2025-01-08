@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: classification-service
+  labels:
+    app: eccn-management
+    context: classification
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: eccn-management
+      context: classification
+  template:
+    metadata:
+      labels:
+        app: eccn-management
+        context: classification
+    spec:
+      containers:
+      - name: classification
+        image: aciworldwide/eccn-classification:1.0.0
+        ports:
+        - containerPort: 8081
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: uri
+        - name: PRODUCT_SERVICE_URL
+          value: "http://product-portfolio-service:8080"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: classification-service
+  labels:
+    app: eccn-management
+    context: classification
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8081
+    targetPort: 8081
+  selector:
+    app: eccn-management
+    context: classification

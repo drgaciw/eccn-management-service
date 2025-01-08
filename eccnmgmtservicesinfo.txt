@@ -1,0 +1,96 @@
+# ECCN Management Service Documentation
+
+## Service Classes Overview
+
+### AutomatedClassificationToolService
+Handles automated classification of software modules for ECCN compliance
+
+**Methods:**
+- `analyzeModule()`: Analyzes a software module and determines its ECCN classification
+- `getClassificationHistory()`: Retrieves classification history for a specific module
+- `checkForClassificationChanges()`: Checks for changes in a module's classification over time
+
+### CryptoClassificationService
+Handles classification of cryptographic functionality based on EAR Category 5 - Part 2 regulations
+
+**Methods:**
+- `classifyCryptography()`: Determines the ECCN classification for cryptographic functionality
+- `qualifiesForMassMarket()`: Checks if cryptographic functionality qualifies for mass market classification
+- `qualifiesForControlledEncryption()`: Checks if cryptographic functionality qualifies as controlled encryption
+- `isRestrictedAlgorithm()`: Determines if an algorithm is restricted under EAR regulations
+
+### DocumentRecordService
+Manages the storage, retrieval, and maintenance of ECCN-related documentation records
+
+**Methods:**
+- `storeDocument()`: Creates and stores a new document record
+- `getDocumentsByType()`: Retrieves documents by their type
+- `searchDocuments()`: Searches documents by name
+- `getDocumentsByModule()`: Retrieves documents associated with a specific module
+- `getDocumentsByEccn()`: Retrieves documents by ECCN classification
+- `archiveExpiredDocuments()`: Archives documents that have expired
+- `getAuditTrail()`: Retrieves document audit trail for a specific user
+- `deleteArchivedDocuments()`: Permanently deletes archived documents
+- `getDocumentsByDateRange()`: Retrieves documents created within a specific date range
+
+### EccnClassificationWorkflowService
+Manages the workflow and lifecycle of ECCN classification processes
+
+**Methods:**
+- `initiateClassification()`: Starts a new classification workflow
+- `escalateClassification()`: Escalates a classification request to legal and compliance teams
+- `completeClassification()`: Marks a classification request as completed
+- `requiresReclassification()`: Determines if a reclassification is needed based on changes
+- `triggerReclassification()`: Initiates a reclassification process
+
+### EccnService
+Manages ECCN (Export Control Classification Number) records and related operations
+
+**Methods:**
+- `createEccn()`: Creates a new ECCN record
+- `updateEccn()`: Updates an existing ECCN record
+- `findByEncryptionControlNumber()`: Finds ECCNs by their encryption control number
+- `findFinancialSoftwareEccns()`: Retrieves ECCNs related to financial software
+- `findDataAnalyticsEccns()`: Finds ECCNs related to data analytics with specific capabilities
+- `findEccnsByEARControls()`: Retrieves ECCNs by applicable EAR (Export Administration Regulations) controls
+- `findAllEccns()`: Retrieves all ECCN records
+
+### ExportControlService
+Manages export control records and compliance requirements
+
+**Methods:**
+- `createExportControl()`: Creates a new export control record
+- `getExportControlsByModule()`: Retrieves export controls for a specific module
+- `getExportControlsByJurisdiction()`: Finds export controls by jurisdiction
+- `getExportControlsWithConflicts()`: Retrieves export controls requiring special handling
+- `addComplianceRequirement()`: Adds a compliance requirement to an export control
+- `getExportControlsByUnifiedClassification()`: Finds export controls by unified classification
+- `flagForSpecialHandling()`: Flags an export control for special handling
+- `searchExportControlsByRequirement()`: Searches export controls by compliance requirement
+- `updateJurisdictionClassification()`: Updates jurisdiction classification for an export control
+
+### ProductService
+Manages product records and their version classifications
+
+**Methods:**
+- `createProduct()`: Creates a new product with initial classification status
+- `updateProduct()`: Updates an existing product while preserving classification statuses
+- `getProductsByStatus()`: Retrieves products by their status
+- `searchProductsByName()`: Searches products by name
+- `getProductsWithPendingClassification()`: Finds products with pending version classifications
+- `markVersionAsClassified()`: Marks a product version as classified and publishes an event
+
+### RiskAssessmentService
+Manages risk assessments for modules and their components
+
+**Methods:**
+- `createRiskAssessment()`: Creates a new risk assessment record
+- `getAssessmentsByModule()`: Retrieves risk assessments for a specific module
+- `getHighRiskAssessments()`: Finds assessments with high risk level
+- `getAssessmentsRequiringReview()`: Retrieves assessments due for review
+- `flagForFollowUp()`: Flags an assessment for follow-up
+- `searchAssessmentsByEndUse()`: Searches assessments by restricted end use
+- `searchAssessmentsByThirdPartyComponent()`: Finds assessments by third-party component
+- `updateMitigationActions()`: Updates mitigation actions for an assessment
+- `getAssessmentsByRiskLevel()`: Retrieves assessments by specific risk level
+- `scheduleNextReview()`: Schedules the next review date for an assessment
