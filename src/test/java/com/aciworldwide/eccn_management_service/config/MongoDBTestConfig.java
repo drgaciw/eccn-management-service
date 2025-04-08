@@ -14,7 +14,12 @@ public class MongoDBTestConfig {
     private static final MongoDBContainer mongoDBContainer;
 
     static {
-        mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6.0"))
+        mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6.0")) {
+            @Override
+            public void close() {
+                super.stop();
+            }
+        }
                 .withExposedPorts(27017);
         mongoDBContainer.start();
     }
