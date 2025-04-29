@@ -3,14 +3,14 @@ services:
     image: mongo:7.0
     container_name: eccn_mongodb
     ports:
-      - "27017:27017"
+      - "27018:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: secret
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,6 +22,9 @@ services:
       - "8080:8080"
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://root:secret@mongodb:27017/eccn_management?authSource=admin
+      SPRING_SECURITY_USER_NAME: admin
+      SPRING_SECURITY_USER_PASSWORD: admin
+      SPRING_SECURITY_USER_ROLES: ADMIN,USER
     depends_on:
       mongodb:
         condition: service_healthy

@@ -16,6 +16,7 @@ com\aciworldwide\eccn_management_service\EccnManagementServiceApplication.class
 com\aciworldwide\eccn_management_service\service\CryptoClassificationService.class
 com\aciworldwide\eccn_management_service\service\IntegrationService$SyncDirection.class
 com\aciworldwide\eccn_management_service\service\RiskAssessmentService.class
+com\aciworldwide\eccn_management_service\config\SecurityConfig.class
 com\aciworldwide\eccn_management_service\repository\DocumentRecordRepository.class
 com\aciworldwide\eccn_management_service\service\CryptoClassificationService$Mode.class
 com\aciworldwide\eccn_management_service\events\ProductEvent.class

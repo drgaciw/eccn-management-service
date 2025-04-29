@@ -11,6 +11,9 @@ import com.aciworldwide.eccn_management_service.model.Eccn.EccnHistoryEntry;
 @Repository
 public interface EccnRepository extends MongoRepository<Eccn, String> {
     List<Eccn> findByCommodityCode(String commodityCode);
+    List<Eccn> findByCommodityCodeContainingIgnoreCase(String term);
+    List<Eccn> findByCategory(String category);
+    List<Eccn> findByEncryptionRelatedTrue();
     List<Eccn> findByFinancialSoftwareTrue();
     List<Eccn> findByDataAnalyticsTrueAndAnalyticsCapabilitiesIn(List<String> capabilities);
     List<Eccn> findByApplicableEARControlsIn(List<String> earControls);

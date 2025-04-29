@@ -12,9 +12,8 @@
 	<artifactId>eccn-management-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>eccn-management-service</name>
-	<description>Demo project for Spring Boot</description>
-	<properties>
-		<java.version>23</java.version>
+	<description>Demo project for Spring Boot</description>	<properties>
+		<java.version>21</java.version>
 		<spring-cloud.version>2024.0.0</spring-cloud.version>
 		<mockito.version>5.8.0</mockito.version>
 		<byte-buddy.version>1.14.11</byte-buddy.version>

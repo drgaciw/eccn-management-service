@@ -1,0 +1,292 @@
+package com.aciworldwide.eccn_management_service.config;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.time.Duration;
+import java.util.stream.Collectors;
+
+import com.aciworldwide.eccn_management_service.exception.SecurityConfigurationException;
+
+/**
+ * Security configuration class that handles all security-related configurations including
+ * CORS, CSRF, security headers, and authorization rules.
+ */
+@Slf4j
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    // Security configuration constants
+    private static final String CSP_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+            "img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; " +
+            "connect-src 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests;";
+    private static final String REFERRER_POLICY = "strict-origin-when-cross-origin";
+    private static final String PERMISSIONS_POLICY = "camera=(), microphone=(), geolocation=(), " +
+            "payment=(), usb=(), magnetometer=(), accelerometer=(), gyroscope=(), " +
+            "midi=(), sync-xhr=(), autoplay=(), encrypted-media=()";
+    private static final String HSTS_POLICY = "max-age=31536000; includeSubDomains; preload";
+    private static final String RATE_LIMIT_POLICY = "60, 60";  // 60 requests per minute
+    private static final long CORS_MAX_AGE_SECONDS = 3600L;
+    private static final int MAX_CORS_ORIGINS = 50;
+    private static final List<String> BLOCKED_HTTP_METHODS = Arrays.asList("OPTIONS", "TRACE", "HEAD");
+
+    @Value("${security.cors.allowed-origins:*}")
+    private String allowedOrigins;
+
+    @Value("${security.cors.allowed-methods:GET,POST,PUT,DELETE,OPTIONS}")
+    private String allowedMethods;
+
+    @Value("${security.cors.allowed-headers:Authorization,Content-Type,X-Requested-With}")
+    private String allowedHeaders;
+
+    @Value("${security.cors.exposed-headers:X-Total-Count,Content-Disposition}")
+    private String exposedHeaders;
+
+    @Value("${security.rate-limit.enabled:true}")
+    private boolean rateLimitEnabled;
+
+    @Value("${security.hsts.enabled:true}")
+    private boolean hstsEnabled;
+
+    /**
+     * Configures the password encoder bean for the application.
+     * Uses BCrypt hashing algorithm with default strength.
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Configures CORS settings for the application.
+     * Values are externalized to application properties for flexibility.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        try {
+            CorsConfiguration configuration = new CorsConfiguration();
+            
+            // Validate and process allowed origins
+            List<String> origins = validateAndProcessList(
+                allowedOrigins,
+                "origins",
+                MAX_CORS_ORIGINS,
+                origin -> origin.matches("^https?://[\\w.-]+(:\\d+)?$|^\\*$")
+            );
+            
+            // Validate and process allowed methods
+            List<String> methods = validateAndProcessList(
+                allowedMethods,
+                "methods",
+                HttpMethod.values().length,
+                method -> Arrays.stream(HttpMethod.values())
+                    .anyMatch(m -> m.name().equals(method))
+            ).stream()
+            .filter(method -> !BLOCKED_HTTP_METHODS.contains(method))
+            .collect(Collectors.toList());
+            
+            // Validate and process headers
+            List<String> headers = validateAndProcessList(
+                allowedHeaders,
+                "headers",
+                50,
+                header -> header.matches("^[\\w-]+$")
+            );
+            
+            List<String> exposed = validateAndProcessList(
+                exposedHeaders,
+                "exposed headers",
+                50,
+                header -> header.matches("^[\\w-]+$")
+            );
+
+            configuration.setAllowedOrigins(origins);
+            configuration.setAllowedMethods(methods);
+            configuration.setAllowedHeaders(headers);
+            configuration.setExposedHeaders(exposed);
+            configuration.setMaxAge(Duration.ofSeconds(CORS_MAX_AGE_SECONDS));
+            configuration.setAllowCredentials(true);
+
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", configuration);
+            
+            log.info("CORS configuration initialized with {} origins and {} methods", 
+                origins.size(), methods.size());
+            return source;
+        } catch (Exception e) {
+            log.error("Error initializing CORS configuration", e);
+            throw new SecurityConfigurationException("Failed to initialize CORS configuration", e);
+        }
+    }
+
+    /**
+     * Validates and processes a comma-separated list of values according to specified rules.
+     *
+     * @param input The comma-separated input string
+     * @param type The type of values being validated (for error messages)
+     * @param maxSize Maximum allowed number of values
+     * @param validator Predicate to validate each value
+     * @return List of validated values
+     */
+    private List<String> validateAndProcessList(String input, String type, int maxSize, java.util.function.Predicate<String> validator) {
+        List<String> values = Optional.ofNullable(input)
+            .map(s -> Arrays.asList(s.split(",")))
+            .orElse(List.of("*"));
+
+        if (values.size() > maxSize) {
+            throw new SecurityConfigurationException(
+                String.format("Too many %s specified. Maximum allowed: %d", type, maxSize)
+            );
+        }
+
+        return values.stream()
+            .map(String::trim)
+            .filter(v -> !v.isEmpty())
+            .peek(v -> {
+                if (!validator.test(v)) {
+                    throw new SecurityConfigurationException(
+                        String.format("Invalid %s value: %s", type, v)
+                    );
+                }
+            })
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Production-specific security filter chain configuration.
+     * Enables CSRF protection and other production-grade security measures.
+     */
+    @Bean
+    @Profile("prod")
+    public SecurityFilterChain prodFilterChain(HttpSecurity http) throws Exception {
+        log.info("Initializing production security filter chain");
+        return configureHttp(http)
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers("/api/**")) // Exclude stateless API endpoints
+            .build();
+    }
+
+    /**
+     * Development-specific security filter chain configuration.
+     * Disables CSRF protection for easier development.
+     */
+    @Bean
+    @Profile("!prod")
+    public SecurityFilterChain devFilterChain(HttpSecurity http) throws Exception {
+        log.warn("Initializing development security filter chain with CSRF disabled");
+        return configureHttp(http)
+            .csrf(csrf -> csrf.disable())
+            .build();
+    }
+
+    /**
+     * Common HTTP security configuration shared between prod and dev environments.
+     * Configures security headers, CORS, session management, and authorization rules.
+     */
+    private HttpSecurity configureHttp(HttpSecurity http) throws Exception {
+        return http
+            .headers(this::configureSecurityHeaders)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(this::configureSessionManagement)
+            .authorizeHttpRequests(this::configureAuthorizationRules)
+            .httpBasic(Customizer.withDefaults());
+    }
+
+    /**
+     * Configures security headers for protection against common web vulnerabilities.
+     */
+    private void configureSecurityHeaders(HttpSecurity.HeadersConfigurer<HttpSecurity> headers) {
+        headers
+            .contentTypeOptions(Customizer.withDefaults())
+            .frameOptions(config -> config.deny())
+            .addHeaderWriter((_, response) -> response.setHeader("Content-Security-Policy", CSP_POLICY))
+            .addHeaderWriter((_, response) -> response.setHeader("Referrer-Policy", REFERRER_POLICY))
+            .addHeaderWriter((_, response) -> response.setHeader("Permissions-Policy", PERMISSIONS_POLICY))
+            .addHeaderWriter((_, response) -> {
+                if (hstsEnabled) {
+                    response.setHeader("Strict-Transport-Security", HSTS_POLICY);
+                }
+            })
+            .addHeaderWriter((_, response) -> {
+                if (rateLimitEnabled) {
+                    response.setHeader("X-RateLimit-Limit", RATE_LIMIT_POLICY);
+                }
+            })
+            .xssProtection(xss -> xss.enable())
+            .cacheControl(cache -> cache.disable());
+
+        log.debug("Security headers configured with HSTS={}, RateLimit={}", hstsEnabled, rateLimitEnabled);
+    }
+
+    /**
+     * Configures session management to use stateless sessions with additional security measures.
+     */
+    private void configureSessionManagement(SessionManagementConfigurer<HttpSecurity> session) {
+        session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .sessionFixation()
+                .newSession();
+        
+        log.debug("Session management configured as STATELESS with session fixation protection");
+    }
+
+    /**
+     * Configures authorization rules for different endpoints with role-based access control.
+     */
+    private void configureAuthorizationRules(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry authorize) {
+        authorize
+            // Public endpoints
+            .requestMatchers(new AntPathRequestMatcher[] {
+                new AntPathRequestMatcher("/swagger-ui.html"),
+                new AntPathRequestMatcher("/swagger-ui/**"),
+                new AntPathRequestMatcher("/v3/api-docs/**"),
+                new AntPathRequestMatcher("/error"),
+                new AntPathRequestMatcher("/health"),
+                new AntPathRequestMatcher("/info")
+            }).permitAll()
+            
+            // Actuator endpoints require admin role
+            .requestMatchers("/actuator/**").hasRole("ADMIN")
+            
+            // API endpoint security with method-based permissions
+            .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
+            .requestMatchers(HttpMethod.POST, "/api/**").hasAnyRole("ADMIN", "EDITOR")
+            .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("ADMIN", "EDITOR")
+            .requestMatchers(HttpMethod.PATCH, "/api/**").hasAnyRole("ADMIN", "EDITOR")
+            .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+            
+            // Block potentially dangerous HTTP methods
+            .requestMatchers(HttpMethod.OPTIONS, "/**").denyAll()
+            .requestMatchers(HttpMethod.TRACE, "/**").denyAll()
+            .requestMatchers(HttpMethod.HEAD, "/**").denyAll()
+            
+            // Require authentication for all other requests
+            .anyRequest().authenticated();
+
+        log.debug("Authorization rules configured with role-based access control");
+    }
+}
