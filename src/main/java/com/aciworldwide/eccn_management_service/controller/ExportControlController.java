@@ -2,12 +2,10 @@ package com.aciworldwide.eccn_management_service.controller;
 
 import com.aciworldwide.eccn_management_service.model.ExportControl;
 import com.aciworldwide.eccn_management_service.repository.ExportControlRepository;
-import com.aciworldwide.eccn_management_service.service.ExportControlService;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,16 +20,12 @@ import java.util.stream.Collectors;
 public class ExportControlController {
 
     private final ExportControlRepository exportControlRepository;
-    private final MongoTemplate mongoTemplate;
     private final MongoClient mongoClient;
-
-    @Autowired
     public ExportControlController(
             ExportControlRepository exportControlRepository,
             MongoTemplate mongoTemplate,
             MongoClient mongoClient) {
         this.exportControlRepository = exportControlRepository;
-        this.mongoTemplate = mongoTemplate;
         this.mongoClient = mongoClient;
     }
 

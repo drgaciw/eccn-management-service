@@ -2,7 +2,6 @@ package com.aciworldwide.eccn_management_service.controller;
 
 import com.aciworldwide.eccn_management_service.model.Eccn;
 import com.aciworldwide.eccn_management_service.repository.EccnRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

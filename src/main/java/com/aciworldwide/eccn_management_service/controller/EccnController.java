@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/eccn")
+@RequestMapping("/api/eccn-operations")
 @RequiredArgsConstructor
 @Tag(name = "ECCN Management", description = "ECCN Management API")
 public class EccnController {

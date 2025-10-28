@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/eccn")
@@ -25,13 +26,15 @@ public class EccnApiController {
         
         // Convert to simplified format for the frontend
         List<Map<String, Object>> simplifiedEccnCodes = eccnCodes.stream()
-            .map(eccn -> Map.of(
-                "id", eccn.getId(),
-                "commodityCode", eccn.getCommodityCode(),
-                "description", eccn.getDescription(),
-                "category", eccn.getCategory(),
-                "encryptionRelated", eccn.isEncryptionRelated()
-            ))
+            .map(eccn -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", eccn.getId());
+                map.put("commodityCode", eccn.getCommodityCode());
+                map.put("description", eccn.getDescription());
+                map.put("category", eccn.getCategory());
+                map.put("encryptionRelated", eccn.isEncryptionRelated());
+                return map;
+            })
             .collect(Collectors.toList());
         
         return ResponseEntity.ok(simplifiedEccnCodes);
@@ -93,3 +96,5 @@ public class EccnApiController {
         return ResponseEntity.noContent().build();
     }
 }
+
+
