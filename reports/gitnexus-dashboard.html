@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project Dashboard — eccn-management-service</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js"
+        integrity="sha384-zkWMJO4sgpPUzyuOgDx8HB/K55glbAwajEpk1Go2NWRuPkPA/wIhoEJTuSkmOYrV"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+<style>
+:root {
+  --bg: #0f1419;
+  --surface: #1a2332;
+  --surface2: #243044;
+  --border: #2d3a4f;
+  --text: #e7ecf3;
+  --muted: #8b9bb4;
+  --accent: #3b82f6;
+  --radius: 10px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+header {
+  padding: 1.75rem 1.5rem 1.25rem;
+  background: linear-gradient(135deg, #152238 0%, #1a2332 55%, #0f1419 100%);
+  border-bottom: 1px solid var(--border);
+}
+header h1 { margin: 0 0 0.25rem; font-size: 1.55rem; font-weight: 650; }
+header .subtitle { color: var(--muted); margin-bottom: 0.65rem; font-size: 0.95rem; }
+header .meta {
+  color: var(--muted);
+  font-size: 0.88rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.15rem;
+  align-items: center;
+}
+header code, code { font-family: var(--mono); font-size: 0.84em; color: #c5d4eb; }
+nav.toc {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: #121820;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+nav.toc a {
+  color: #93c5fd;
+  text-decoration: none;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+nav.toc a:hover { border-color: var(--border); background: var(--surface); }
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 3rem;
+}
+section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem 1.25rem;
+  margin-bottom: 1.1rem;
+}
+section h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.08rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+section h3 {
+  margin: 1rem 0 0.55rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+}
+.card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 0.9rem;
+}
+.card .label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.card .value {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-top: 0.15rem;
+}
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+th, td {
+  text-align: left;
+  padding: 0.42rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  user-select: none;
+}
+th:hover { color: var(--text); }
+th.sorted-asc::after { content: " ▲"; font-size: 0.7em; }
+th.sorted-desc::after { content: " ▼"; font-size: 0.7em; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.badge {
+  display: inline-block;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+.fresh { background: #14532d33; color: #4ade80; border-color: #166534; }
+.stale { background: #7c2d1233; color: #fb923c; border-color: #9a3412; }
+.risk-low { background: #14532d33; color: #4ade80; border-color: #166534; }
+.risk-medium { background: #78350f33; color: #fbbf24; border-color: #92400e; }
+.risk-high, .risk-critical { background: #7f1d1d33; color: #f87171; border-color: #991b1b; }
+.risk-unknown { background: var(--surface2); color: var(--muted); }
+.m-get { background: #14532d33; color: #22c55e; border-color: #166534; }
+.m-post { background: #1e3a5f33; color: #60a5fa; border-color: #1d4ed8; }
+.m-put { background: #78350f33; color: #f59e0b; border-color: #92400e; }
+.m-patch { background: #581c8733; color: #c084fc; border-color: #6b21a8; }
+.m-delete { background: #7f1d1d33; color: #ef4444; border-color: #991b1b; }
+.type-cross { background: #1e3a5f33; color: #93c5fd; border-color: #1d4ed8; }
+.type-intra { background: #14532d33; color: #86efac; border-color: #166534; }
+.bar-track {
+  position: relative;
+  height: 1.15rem;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 70px;
+}
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  border-radius: 4px;
+}
+.bar-label {
+  position: absolute;
+  right: 6px;
+  top: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text);
+  text-shadow: 0 0 3px #000;
+}
+.symbol-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.symbol-kind { color: var(--muted); font-size: 0.85rem; }
+.mix { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.85rem; }
+.mix-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+.mix-item .num { font-size: 1.2rem; font-weight: 700; }
+.health-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.mermaid {
+  background: #0b1220;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+}
+.mermaid-fallback {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  color: var(--muted);
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: none;
+}
+ul.risk-list, ul.dirty-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.2rem;
+}
+ul.risk-list li { margin-bottom: 0.35rem; }
+details summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+footer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.25rem 2.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+footer a { color: #60a5fa; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ECCN Management Service — Project Dashboard</h1>
+  <div class="subtitle">Engineering snapshot · stack, architecture, UML, API, complexity, git, risks, GitNexus</div>
+  <div class="meta">
+    <span><strong>eccn-management-service</strong> <code>0.0.1-SNAPSHOT</code></span>
+    <span>branch <code>feature/lane-a-modernization</code></span>
+    <span>HEAD <code title="d952df49a4a32cd55704b492817f00ad2823071a">d952df4</code></span>
+    <span>generated <code>2026-07-10 20:00:10 UTC</code></span>
+    <span><span class="badge fresh">index up-to-date</span></span>
+  </div>
+  <div class='meta' style='margin-top:0.45rem'><span>remote <code>https://github.com/drgaciw/eccn-management-service</code></span></div>
+</header>
+<nav class="toc">
+  <a href="#overview">Overview</a>
+  <a href="#stack">Stack</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#uml">UML</a>
+  <a href="#api">API</a>
+  <a href="#complexity">Complexity</a>
+  <a href="#git">Git</a>
+  <a href="#risks">Risks</a>
+  <a href="#gitnexus">GitNexus</a>
+</nav>
+<main>
+
+<section id="overview">
+  <h2>Overview</h2>
+  <div class="cards">
+    <div class="card"><div class="label">Main Java files</div><div class="value">46</div></div>
+    <div class="card"><div class="label">Controllers</div><div class="value">5</div></div>
+    <div class="card"><div class="label">Services</div><div class="value">12</div></div>
+    <div class="card"><div class="label">Repositories</div><div class="value">8</div></div>
+    <div class="card"><div class="label">Models</div><div class="value">8</div></div>
+    <div class="card"><div class="label">API routes</div><div class="value">19</div></div>
+    <div class="card"><div class="label">GN symbols</div><div class="value">1411</div></div>
+    <div class="card"><div class="label">GN processes</div><div class="value">100</div></div>
+    <div class="card"><div class="label">Max complexity</div><div class="value">7</div></div>
+    <div class="card"><div class="label">Dirty paths</div><div class="value">6</div></div>
+  </div>
+</section>
+
+<section id="stack">
+  <h2>Tech stack &amp; versions</h2>
+  <p class="muted" style="margin-top:0">From <code>pom.xml</code> (live parse — not tech-stack.md).</p>
+  <div class="table-wrap">
+  <table data-sortable>
+    <thead><tr><th data-type="text">Layer</th><th data-type="text">Technology</th><th data-type="text">Version</th></tr></thead>
+    <tbody>
+      <tr><td>Language</td><td>Java</td><td><code>21</code></td></tr><tr><td>Build</td><td>Maven / Spring Boot parent</td><td><code>3.5.9</code></td></tr><tr><td>Cloud BOM</td><td>Spring Cloud</td><td><code>2025.0.0</code></td></tr><tr><td>API</td><td>Spring Web MVC</td><td><code>3.5.9</code></td></tr><tr><td>Persistence</td><td>Spring Data MongoDB</td><td><code>3.5.9</code></td></tr><tr><td>Security</td><td>Spring Security</td><td><code>3.5.9</code></td></tr><tr><td>API Docs</td><td>Springdoc OpenAPI</td><td><code>2.8.6</code></td></tr><tr><td>Resilience</td><td>Resilience4j</td><td><code>(BOM)</code></td></tr><tr><td>Cache</td><td>Caffeine</td><td><code>3.2.4</code></td></tr><tr><td>Codegen</td><td>Lombok</td><td><code>1.18.46</code></td></tr><tr><td>Testing</td><td>Testcontainers MongoDB</td><td><code>1.21.4</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <details style="margin-top:0.85rem">
+    <summary>All Maven dependencies (25)</summary>
+    <div class="table-wrap" style="margin-top:0.5rem">
+    <table data-sortable>
+      <thead><tr><th data-type="text">groupId</th><th data-type="text">artifactId</th><th data-type="text">version</th><th data-type="text">scope</th></tr></thead>
+      <tbody><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-starter-actuator</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>io.micrometer</code></td><td><code>micrometer-registry-prometheus</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springframework.cloud</code></td><td><code>spring-cloud-starter-loadbalancer</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springframework.cloud</code></td><td><code>spring-cloud-starter-circuitbreaker-resilience4j</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springframework.cloud</code></td><td><code>spring-cloud-starter</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-starter-data-mongodb</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.testcontainers</code></td><td><code>mongodb</code></td><td><code>1.21.4</code></td><td>test</td></tr><tr><td><code>org.testcontainers</code></td><td><code>junit-jupiter</code></td><td><code>1.21.4</code></td><td>test</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-starter-data-rest</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-starter-security</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-devtools</code></td><td><code>(BOM/parent)</code></td><td>runtime</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-starter-test</code></td><td><code>(BOM/parent)</code></td><td>test</td></tr><tr><td><code>org.projectlombok</code></td><td><code>lombok</code></td><td><code>1.18.46</code></td><td>compile</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-starter-web</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-starter-cache</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>com.github.ben-manes.caffeine</code></td><td><code>caffeine</code></td><td><code>3.2.4</code></td><td>compile</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-starter-validation</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-starter-logging</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springframework.boot</code></td><td><code>spring-boot-configuration-processor</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.springdoc</code></td><td><code>springdoc-openapi-starter-webmvc-ui</code></td><td><code>2.8.6</code></td><td>compile</td></tr><tr><td><code>io.github.java-diff-utils</code></td><td><code>java-diff-utils</code></td><td><code>4.17</code></td><td>compile</td></tr><tr><td><code>io.projectreactor</code></td><td><code>reactor-test</code></td><td><code>(BOM/parent)</code></td><td>test</td></tr><tr><td><code>io.github.resilience4j</code></td><td><code>resilience4j-bulkhead</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>io.github.resilience4j</code></td><td><code>resilience4j-spring-boot3</code></td><td><code>(BOM/parent)</code></td><td>compile</td></tr><tr><td><code>org.testcontainers</code></td><td><code>testcontainers</code></td><td><code>1.21.4</code></td><td>test</td></tr></tbody>
+    </table>
+    </div>
+  </details>
+</section>
+
+<section id="architecture">
+  <h2>Architecture / packages</h2>
+  <div class="table-wrap">
+  <table data-sortable>
+    <thead><tr><th data-type="text">Layer</th><th class="num" data-type="num">Types</th><th data-type="text">Names</th></tr></thead>
+    <tbody>
+      <tr><td><code>application</code></td><td class="num">1</td><td>EccnManagementServiceApplication</td></tr><tr><td><code>config</code></td><td class="num">4</td><td>MongoConfig, OpenApiConfig, SecurityConfig, WebConfig</td></tr><tr><td><code>controller</code></td><td class="num">5</td><td>CryptoClassificationController, EccnController, GlossaryController, HealthController, ProductController</td></tr><tr><td><code>events</code></td><td class="num">1</td><td>ProductEvent</td></tr><tr><td><code>exception</code></td><td class="num">7</td><td>EccnException, EccnNotFoundException, EccnValidationException, GlobalExceptionHandler, GlossaryException, IntegrationException, InvalidEccnFormatException</td></tr><tr><td><code>model</code></td><td class="num">8</td><td>DocumentRecord, DocumentVersion, Eccn, ExportControl, GlossaryEntry, Product, RiskAssessment, ValidationResult</td></tr><tr><td><code>repository</code></td><td class="num">8</td><td>ClassificationHistoryRepository, DocumentRecordRepository, DocumentVersionRepository, EccnRepository, ExportControlRepository, GlossaryEntryRepository, ProductRepository, RiskAssessmentRepository</td></tr><tr><td><code>service</code></td><td class="num">12</td><td>AutomatedClassificationToolService, BisGlossaryDataLoader, CryptoClassificationService, DocumentRecordService, EccnClassificationWorkflowService, EccnService, ExportControlService, ExternalEccnValidationService, GlossaryService, IntegrationService, ProductService, RiskAssessmentService</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="uml">
+  <h2>UML diagrams <span class="badge">Mermaid</span></h2>
+  <h3>Component diagram</h3>
+  <pre class="mermaid">flowchart TB
+  subgraph clients [Clients]
+    HTTP[HTTP / OpenAPI clients]
+  end
+  subgraph api [API Layer]
+    CryptoClassificationController[CryptoClassificationController]
+    EccnController[EccnController]
+    GlossaryController[GlossaryController]
+    HealthController[HealthController]
+    ProductController[ProductController]
+  end
+  subgraph domain [Domain Services]
+    AutomatedClassificationToolService[AutomatedClassificationToolService]
+    BisGlossaryDataLoader[BisGlossaryDataLoader]
+    CryptoClassificationService[CryptoClassificationService]
+    DocumentRecordService[DocumentRecordService]
+    EccnClassificationWorkflowService[EccnClassificationWorkflowService]
+    EccnService[EccnService]
+    ExportControlService[ExportControlService]
+    ExternalEccnValidationService[ExternalEccnValidationService]
+    GlossaryService[GlossaryService]
+    IntegrationService[IntegrationService]
+    ProductService[ProductService]
+    RiskAssessmentService[RiskAssessmentService]
+  end
+  subgraph persistence [Persistence]
+    ClassificationHistoryRepository[ClassificationHistoryRepository]
+    DocumentRecordRepository[DocumentRecordRepository]
+    DocumentVersionRepository[DocumentVersionRepository]
+    EccnRepository[EccnRepository]
+    ExportControlRepository[ExportControlRepository]
+    GlossaryEntryRepository[GlossaryEntryRepository]
+    ProductRepository[ProductRepository]
+    RiskAssessmentRepository[RiskAssessmentRepository]
+    Mongo[(MongoDB)]
+  end
+  subgraph crosscut [Cross-cutting]
+    MongoConfig[MongoConfig]
+    OpenApiConfig[OpenApiConfig]
+    SecurityConfig[SecurityConfig]
+    WebConfig[WebConfig]
+  end
+  subgraph entities [Domain Models]
+    DocumentRecord[DocumentRecord]
+    DocumentVersion[DocumentVersion]
+    Eccn[Eccn]
+    ExportControl[ExportControl]
+    GlossaryEntry[GlossaryEntry]
+    Product[Product]
+    RiskAssessment[RiskAssessment]
+    ValidationResult[ValidationResult]
+  end
+  HTTP --> api
+  EccnController --> EccnService
+  ProductController --> ProductService
+  ProductService --> ProductRepository
+  CryptoClassificationController --> CryptoClassificationService
+  DocumentRecordService --> DocumentRecordRepository
+  AutomatedClassificationToolService --> CryptoClassificationService
+  ExportControlService --> ExportControlRepository
+  EccnService --> EccnRepository
+  RiskAssessmentService --> RiskAssessmentRepository
+  GlossaryController --> GlossaryService
+  DocumentRecordService --> DocumentVersionRepository
+  BisGlossaryDataLoader --> GlossaryService
+  GlossaryService --> GlossaryEntryRepository
+  AutomatedClassificationToolService --> ClassificationHistoryRepository
+  ClassificationHistoryRepository --> Mongo
+  DocumentRecordRepository --> Mongo
+  DocumentVersionRepository --> Mongo
+  EccnRepository --> Mongo
+  ExportControlRepository --> Mongo
+  GlossaryEntryRepository --> Mongo
+  ProductRepository --> Mongo
+  RiskAssessmentRepository --> Mongo
+  MongoConfig -.-> api
+  OpenApiConfig -.-> api
+  SecurityConfig -.-> api
+  WebConfig -.-> api
+  %% indexed API routes: 19</pre>
+  <details>
+    <summary>Component diagram source</summary>
+    <pre class="mermaid-fallback" style="display:block">flowchart TB
+  subgraph clients [Clients]
+    HTTP[HTTP / OpenAPI clients]
+  end
+  subgraph api [API Layer]
+    CryptoClassificationController[CryptoClassificationController]
+    EccnController[EccnController]
+    GlossaryController[GlossaryController]
+    HealthController[HealthController]
+    ProductController[ProductController]
+  end
+  subgraph domain [Domain Services]
+    AutomatedClassificationToolService[AutomatedClassificationToolService]
+    BisGlossaryDataLoader[BisGlossaryDataLoader]
+    CryptoClassificationService[CryptoClassificationService]
+    DocumentRecordService[DocumentRecordService]
+    EccnClassificationWorkflowService[EccnClassificationWorkflowService]
+    EccnService[EccnService]
+    ExportControlService[ExportControlService]
+    ExternalEccnValidationService[ExternalEccnValidationService]
+    GlossaryService[GlossaryService]
+    IntegrationService[IntegrationService]
+    ProductService[ProductService]
+    RiskAssessmentService[RiskAssessmentService]
+  end
+  subgraph persistence [Persistence]
+    ClassificationHistoryRepository[ClassificationHistoryRepository]
+    DocumentRecordRepository[DocumentRecordRepository]
+    DocumentVersionRepository[DocumentVersionRepository]
+    EccnRepository[EccnRepository]
+    ExportControlRepository[ExportControlRepository]
+    GlossaryEntryRepository[GlossaryEntryRepository]
+    ProductRepository[ProductRepository]
+    RiskAssessmentRepository[RiskAssessmentRepository]
+    Mongo[(MongoDB)]
+  end
+  subgraph crosscut [Cross-cutting]
+    MongoConfig[MongoConfig]
+    OpenApiConfig[OpenApiConfig]
+    SecurityConfig[SecurityConfig]
+    WebConfig[WebConfig]
+  end
+  subgraph entities [Domain Models]
+    DocumentRecord[DocumentRecord]
+    DocumentVersion[DocumentVersion]
+    Eccn[Eccn]
+    ExportControl[ExportControl]
+    GlossaryEntry[GlossaryEntry]
+    Product[Product]
+    RiskAssessment[RiskAssessment]
+    ValidationResult[ValidationResult]
+  end
+  HTTP --&gt; api
+  EccnController --&gt; EccnService
+  ProductController --&gt; ProductService
+  ProductService --&gt; ProductRepository
+  CryptoClassificationController --&gt; CryptoClassificationService
+  DocumentRecordService --&gt; DocumentRecordRepository
+  AutomatedClassificationToolService --&gt; CryptoClassificationService
+  ExportControlService --&gt; ExportControlRepository
+  EccnService --&gt; EccnRepository
+  RiskAssessmentService --&gt; RiskAssessmentRepository
+  GlossaryController --&gt; GlossaryService
+  DocumentRecordService --&gt; DocumentVersionRepository
+  BisGlossaryDataLoader --&gt; GlossaryService
+  GlossaryService --&gt; GlossaryEntryRepository
+  AutomatedClassificationToolService --&gt; ClassificationHistoryRepository
+  ClassificationHistoryRepository --&gt; Mongo
+  DocumentRecordRepository --&gt; Mongo
+  DocumentVersionRepository --&gt; Mongo
+  EccnRepository --&gt; Mongo
+  ExportControlRepository --&gt; Mongo
+  GlossaryEntryRepository --&gt; Mongo
+  ProductRepository --&gt; Mongo
+  RiskAssessmentRepository --&gt; Mongo
+  MongoConfig -.-&gt; api
+  OpenApiConfig -.-&gt; api
+  SecurityConfig -.-&gt; api
+  WebConfig -.-&gt; api
+  %% indexed API routes: 19</pre>
+  </details>
+  <h3>Class diagram</h3>
+  <pre class="mermaid">classDiagram
+  class CryptoClassificationController {
+    <<Controller>>
+  }
+  class EccnController {
+    <<Controller>>
+  }
+  class GlossaryController {
+    <<Controller>>
+  }
+  class HealthController {
+    <<Controller>>
+  }
+  class ProductController {
+    <<Controller>>
+  }
+  class AutomatedClassificationToolService {
+    <<Service>>
+  }
+  class BisGlossaryDataLoader {
+    <<Service>>
+  }
+  class CryptoClassificationService {
+    <<Service>>
+  }
+  class DocumentRecordService {
+    <<Service>>
+  }
+  class EccnClassificationWorkflowService {
+    <<Service>>
+  }
+  class EccnService {
+    <<Service>>
+  }
+  class ExportControlService {
+    <<Service>>
+  }
+  class ExternalEccnValidationService {
+    <<Service>>
+  }
+  class GlossaryService {
+    <<Service>>
+  }
+  class IntegrationService {
+    <<Service>>
+  }
+  class ProductService {
+    <<Service>>
+  }
+  class RiskAssessmentService {
+    <<Service>>
+  }
+  class ClassificationHistoryRepository {
+    <<Repository>>
+  }
+  class DocumentRecordRepository {
+    <<Repository>>
+  }
+  class DocumentVersionRepository {
+    <<Repository>>
+  }
+  class EccnRepository {
+    <<Repository>>
+  }
+  class ExportControlRepository {
+    <<Repository>>
+  }
+  class GlossaryEntryRepository {
+    <<Repository>>
+  }
+  class ProductRepository {
+    <<Repository>>
+  }
+  class RiskAssessmentRepository {
+    <<Repository>>
+  }
+  class DocumentRecord {
+    <<Model>>
+  }
+  class DocumentVersion {
+    <<Model>>
+  }
+  class Eccn {
+    <<Model>>
+  }
+  class ExportControl {
+    <<Model>>
+  }
+  class GlossaryEntry {
+    <<Model>>
+  }
+  class Product {
+    <<Model>>
+  }
+  class RiskAssessment {
+    <<Model>>
+  }
+  class ValidationResult {
+    <<Model>>
+  }
+  CryptoClassificationController --> CryptoClassificationService : uses
+  EccnController --> EccnService : uses
+  GlossaryController --> GlossaryService : uses
+  ProductController --> ProductService : uses
+  AutomatedClassificationToolService --> ClassificationHistoryRepository : uses
+  AutomatedClassificationToolService --> CryptoClassificationService : uses
+  BisGlossaryDataLoader --> GlossaryService : uses
+  DocumentRecordService --> DocumentRecordRepository : uses
+  DocumentRecordService --> DocumentVersionRepository : uses
+  EccnService --> EccnRepository : uses
+  ExportControlService --> ExportControlRepository : uses
+  GlossaryService --> GlossaryEntryRepository : uses
+  ProductService --> ProductRepository : uses
+  RiskAssessmentService --> RiskAssessmentRepository : uses
+  DocumentRecordRepository ..> DocumentRecord : persists
+  DocumentVersionRepository ..> DocumentVersion : persists
+  EccnRepository ..> Eccn : persists
+  ExportControlRepository ..> ExportControl : persists
+  GlossaryEntryRepository ..> GlossaryEntry : persists
+  ProductRepository ..> Product : persists
+  RiskAssessmentRepository ..> RiskAssessment : persists</pre>
+  <details>
+    <summary>Class diagram source</summary>
+    <pre class="mermaid-fallback" style="display:block">classDiagram
+  class CryptoClassificationController {
+    &lt;&lt;Controller&gt;&gt;
+  }
+  class EccnController {
+    &lt;&lt;Controller&gt;&gt;
+  }
+  class GlossaryController {
+    &lt;&lt;Controller&gt;&gt;
+  }
+  class HealthController {
+    &lt;&lt;Controller&gt;&gt;
+  }
+  class ProductController {
+    &lt;&lt;Controller&gt;&gt;
+  }
+  class AutomatedClassificationToolService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class BisGlossaryDataLoader {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class CryptoClassificationService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class DocumentRecordService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class EccnClassificationWorkflowService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class EccnService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class ExportControlService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class ExternalEccnValidationService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class GlossaryService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class IntegrationService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class ProductService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class RiskAssessmentService {
+    &lt;&lt;Service&gt;&gt;
+  }
+  class ClassificationHistoryRepository {
+    &lt;&lt;Repository&gt;&gt;
+  }
+  class DocumentRecordRepository {
+    &lt;&lt;Repository&gt;&gt;
+  }
+  class DocumentVersionRepository {
+    &lt;&lt;Repository&gt;&gt;
+  }
+  class EccnRepository {
+    &lt;&lt;Repository&gt;&gt;
+  }
+  class ExportControlRepository {
+    &lt;&lt;Repository&gt;&gt;
+  }
+  class GlossaryEntryRepository {
+    &lt;&lt;Repository&gt;&gt;
+  }
+  class ProductRepository {
+    &lt;&lt;Repository&gt;&gt;
+  }
+  class RiskAssessmentRepository {
+    &lt;&lt;Repository&gt;&gt;
+  }
+  class DocumentRecord {
+    &lt;&lt;Model&gt;&gt;
+  }
+  class DocumentVersion {
+    &lt;&lt;Model&gt;&gt;
+  }
+  class Eccn {
+    &lt;&lt;Model&gt;&gt;
+  }
+  class ExportControl {
+    &lt;&lt;Model&gt;&gt;
+  }
+  class GlossaryEntry {
+    &lt;&lt;Model&gt;&gt;
+  }
+  class Product {
+    &lt;&lt;Model&gt;&gt;
+  }
+  class RiskAssessment {
+    &lt;&lt;Model&gt;&gt;
+  }
+  class ValidationResult {
+    &lt;&lt;Model&gt;&gt;
+  }
+  CryptoClassificationController --&gt; CryptoClassificationService : uses
+  EccnController --&gt; EccnService : uses
+  GlossaryController --&gt; GlossaryService : uses
+  ProductController --&gt; ProductService : uses
+  AutomatedClassificationToolService --&gt; ClassificationHistoryRepository : uses
+  AutomatedClassificationToolService --&gt; CryptoClassificationService : uses
+  BisGlossaryDataLoader --&gt; GlossaryService : uses
+  DocumentRecordService --&gt; DocumentRecordRepository : uses
+  DocumentRecordService --&gt; DocumentVersionRepository : uses
+  EccnService --&gt; EccnRepository : uses
+  ExportControlService --&gt; ExportControlRepository : uses
+  GlossaryService --&gt; GlossaryEntryRepository : uses
+  ProductService --&gt; ProductRepository : uses
+  RiskAssessmentService --&gt; RiskAssessmentRepository : uses
+  DocumentRecordRepository ..&gt; DocumentRecord : persists
+  DocumentVersionRepository ..&gt; DocumentVersion : persists
+  EccnRepository ..&gt; Eccn : persists
+  ExportControlRepository ..&gt; ExportControl : persists
+  GlossaryEntryRepository ..&gt; GlossaryEntry : persists
+  ProductRepository ..&gt; Product : persists
+  RiskAssessmentRepository ..&gt; RiskAssessment : persists</pre>
+  </details>
+  <p class="muted" style="margin-bottom:0">Diagrams are derived from <code>src/main/java</code> package layout and <code>private final</code> injection edges. Mermaid is loaded from jsDelivr to render in-browser.</p>
+</section>
+
+<section id="api">
+  <h2>API surface <span class="badge">19 routes</span></h2>
+  <p class="muted" style="margin-top:0">Indexed by GitNexus <code>HANDLES_ROUTE</code> (may omit some mappings such as health if not in the graph).</p>
+  <div class="table-wrap">
+  <table data-sortable>
+    <thead><tr><th data-type="text">Method</th><th data-type="text">Route</th><th data-type="text">Handler</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge m-post">POST</span></td><td><code>/api/crypto-classification/classify</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/CryptoClassificationController.java">CryptoClassificationController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/v1/eccn/search</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/EccnController.java">EccnController.java</td></tr><tr><td><span class="badge m-delete">DELETE</span></td><td><code>/api/v1/eccn/{id}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/EccnController.java">EccnController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/v1/eccn/{id}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/EccnController.java">EccnController.java</td></tr><tr><td><span class="badge m-put">PUT</span></td><td><code>/api/v1/eccn/{id}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/EccnController.java">EccnController.java</td></tr><tr><td><span class="badge m-post">POST</span></td><td><code>/api/v1/glossary/bulk</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/GlossaryController.java">GlossaryController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/v1/glossary/category/{category}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/GlossaryController.java">GlossaryController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/v1/glossary/cross-reference/{reference}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/GlossaryController.java">GlossaryController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/v1/glossary/search</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/GlossaryController.java">GlossaryController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/v1/glossary/term/{term}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/GlossaryController.java">GlossaryController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/v1/glossary/updates</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/GlossaryController.java">GlossaryController.java</td></tr><tr><td><span class="badge m-delete">DELETE</span></td><td><code>/api/v1/glossary/{id}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/GlossaryController.java">GlossaryController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/v1/glossary/{id}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/GlossaryController.java">GlossaryController.java</td></tr><tr><td><span class="badge m-put">PUT</span></td><td><code>/api/v1/glossary/{id}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/GlossaryController.java">GlossaryController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/products/pending-classification</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/ProductController.java">ProductController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/products/search</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/ProductController.java">ProductController.java</td></tr><tr><td><span class="badge m-get">GET</span></td><td><code>/api/products/status/{status}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/ProductController.java">ProductController.java</td></tr><tr><td><span class="badge m-put">PUT</span></td><td><code>/api/products/{id}</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/ProductController.java">ProductController.java</td></tr><tr><td><span class="badge m-patch">PATCH</span></td><td><code>/api/products/{productId}/versions/{versionNumber}/mark-classified</code></td><td title="src/main/java/com/aciworldwide/eccn_management_service/controller/ProductController.java">ProductController.java</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="complexity">
+  <h2>Cyclomatic complexity</h2>
+  <div class="cards" style="margin-bottom:0.9rem">
+    <div class="card"><div class="label">Files</div><div class="value">46</div></div>
+    <div class="card"><div class="label">Methods</div><div class="value">297</div></div>
+    <div class="card"><div class="label">Average</div><div class="value">1.45</div></div>
+    <div class="card"><div class="label">Maximum</div><div class="value">7</div></div>
+    <div class="card"><div class="label">Over threshold</div><div class="value">0</div></div>
+  </div>
+  <h3>Highest-complexity methods</h3>
+  <div class="table-wrap">
+  <table data-sortable>
+    <thead>
+      <tr>
+        <th data-type="text">Class</th>
+        <th data-type="text">Method</th>
+        <th class="num" data-type="num">v(G)</th>
+        <th data-type="num">Bar</th>
+        <th data-type="text">Risk</th>
+        <th data-type="text">File</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>GlossaryService</td><td><code>validateEntry</code></td><td class="num">7</td><td><div class="bar-track"><div class="bar-fill" style="width:100%"></div><span class="bar-label">7</span></div></td><td><span class="badge risk-medium">moderate</span></td><td><code>GlossaryService.java</code></td></tr><tr><td>DocumentRecordService</td><td><code>generateDiff</code></td><td class="num">5</td><td><div class="bar-track"><div class="bar-fill" style="width:71%"></div><span class="bar-label">5</span></div></td><td><span class="badge risk-low">low</span></td><td><code>DocumentRecordService.java</code></td></tr><tr><td>EccnService</td><td><code>validateControlReasons</code></td><td class="num">5</td><td><div class="bar-track"><div class="bar-fill" style="width:71%"></div><span class="bar-label">5</span></div></td><td><span class="badge risk-low">low</span></td><td><code>EccnService.java</code></td></tr><tr><td>Mode</td><td><code>classifyCryptography</code></td><td class="num">5</td><td><div class="bar-track"><div class="bar-fill" style="width:71%"></div><span class="bar-label">5</span></div></td><td><span class="badge risk-low">low</span></td><td><code>CryptoClassificationService.java</code></td></tr><tr><td>DocumentRecordService</td><td><code>for</code></td><td class="num">4</td><td><div class="bar-track"><div class="bar-fill" style="width:57%"></div><span class="bar-label">4</span></div></td><td><span class="badge risk-low">low</span></td><td><code>DocumentRecordService.java</code></td></tr><tr><td>EccnService</td><td><code>validateDescription</code></td><td class="num">4</td><td><div class="bar-track"><div class="bar-fill" style="width:57%"></div><span class="bar-label">4</span></div></td><td><span class="badge risk-low">low</span></td><td><code>EccnService.java</code></td></tr><tr><td>Mode</td><td><code>classifyCryptoAlgorithm</code></td><td class="num">4</td><td><div class="bar-track"><div class="bar-fill" style="width:57%"></div><span class="bar-label">4</span></div></td><td><span class="badge risk-low">low</span></td><td><code>CryptoClassificationService.java</code></td></tr><tr><td>ModuleType</td><td><code>determineClassification</code></td><td class="num">4</td><td><div class="bar-track"><div class="bar-fill" style="width:57%"></div><span class="bar-label">4</span></div></td><td><span class="badge risk-low">low</span></td><td><code>AutomatedClassificationToolService.java</code></td></tr><tr><td>ModuleType</td><td><code>validateInputParameters</code></td><td class="num">4</td><td><div class="bar-track"><div class="bar-fill" style="width:57%"></div><span class="bar-label">4</span></div></td><td><span class="badge risk-low">low</span></td><td><code>AutomatedClassificationToolService.java</code></td></tr><tr><td>BisGlossaryDataLoader</td><td><code>loadInitialData</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>BisGlossaryDataLoader.java</code></td></tr><tr><td>EccnService</td><td><code>findAll</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>EccnService.java</code></td></tr><tr><td>EccnService</td><td><code>searchEccns</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>EccnService.java</code></td></tr><tr><td>EccnService</td><td><code>validateCategory</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>EccnService.java</code></td></tr><tr><td>EccnService</td><td><code>validateEccnCode</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>EccnService.java</code></td></tr><tr><td>EccnService</td><td><code>validateEccnFormat</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>EccnService.java</code></td></tr><tr><td>EccnService</td><td><code>validateSubCategory</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>EccnService.java</code></td></tr><tr><td>GlossaryService</td><td><code>findByCrossReference</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>GlossaryService.java</code></td></tr><tr><td>GlossaryService</td><td><code>findByRegulatoryContext</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>GlossaryService.java</code></td></tr><tr><td>GlossaryService</td><td><code>findEntriesNeedingUpdate</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>GlossaryService.java</code></td></tr><tr><td>GlossaryService</td><td><code>importBulkEntries</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>GlossaryService.java</code></td></tr><tr><td>GlossaryService</td><td><code>searchByDefinitionContent</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>GlossaryService.java</code></td></tr><tr><td>GlossaryService</td><td><code>searchByTermPart</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>GlossaryService.java</code></td></tr><tr><td>Mode</td><td><code>assessDeMinimis</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>CryptoClassificationService.java</code></td></tr><tr><td>Mode</td><td><code>getEncryptionRegistrationNumber</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>CryptoClassificationService.java</code></td></tr><tr><td>Mode</td><td><code>qualifiesForControlledEncryption</code></td><td class="num">3</td><td><div class="bar-track"><div class="bar-fill" style="width:43%"></div><span class="bar-label">3</span></div></td><td><span class="badge risk-low">low</span></td><td><code>CryptoClassificationService.java</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="git">
+  <h2>Git state</h2>
+  <div class="health-row">
+    <span>Branch <code>feature/lane-a-modernization</code></span>
+    <span>HEAD <code>d952df4</code></span>
+    <span class="muted">## feature/lane-a-modernization</span>
+  </div>
+  <h3>Dirty / untracked</h3>
+  <ul class="dirty-list"><li><code> M AGENTS.md</code></li><li><code> M CLAUDE.md</code></li><li><code>?? .cursor/</code></li><li><code>?? .kilo/</code></li><li><code>?? reports/</code></li><li><code>?? scripts/generate_gitnexus_dashboard.py</code></li></ul>
+  <h3>Recent commits</h3>
+  <div class="table-wrap">
+  <table data-sortable>
+    <thead><tr><th data-type="text">Hash</th><th data-type="text">Date</th><th data-type="text">Subject</th></tr></thead>
+    <tbody><tr><td><code>d952df4</code></td><td>2026-07-10</td><td>fix: resolve deprecation warnings and update dependencies</td></tr><tr><td><code>45cba65</code></td><td>2026-07-09</td><td>feat(core): modernize stack and implement security and glossary capabilities</td></tr><tr><td><code>bacae87</code></td><td>2026-07-09</td><td>chore: ignore Eclipse .factorypath artifact</td></tr><tr><td><code>c6e801c</code></td><td>2026-07-08</td><td>chore(agents): add ECCN capability agents and skills</td></tr><tr><td><code>4d22748</code></td><td>2025-01-08</td><td>Remove postman/curl-import.sh containing secret</td></tr><tr><td><code>a01a40b</code></td><td>2025-01-08</td><td>Remove hardcoded Postman API key</td></tr><tr><td><code>6310707</code></td><td>2025-01-08</td><td>Inital Commit</td></tr><tr><td><code>f0cba1c</code></td><td>2025-01-05</td><td>Add existing project files</td></tr></tbody>
+  </table>
+  </div>
+</section>
+
+<section id="risks">
+  <h2>Known project risks / drift</h2>
+  <p class="muted" style="margin-top:0">From <code>AGENTS.md</code> — Known Project Drift / Risks.</p>
+  <ul class="risk-list"><li>README says Java 17+, MockMvc, and GitHub Actions; `pom.xml`/Docker use Java 21, no MockMvc usage or `.github/workflows` were found.</li><li>Docker build skips tests.</li><li>Compose uses `SPRING_DATA_MONGODB_URI`; Rancher manifests use `MONGODB_URI`, which Spring Boot will not bind automatically without custom mapping.</li><li>`application.properties` contains local default credentials and exposes all actuator endpoints/health details.</li><li>CORS omits PATCH while Product API uses PATCH.</li><li>Existing `.kilocodemodes` had stale TypeScript/actor-system language; use ECCN-specific modes instead.</li></ul>
+</section>
+
+<section id="gitnexus">
+  <h2>GitNexus graph metrics</h2>
+  <div class="cards" style="margin-bottom:0.9rem">
+    <div class="card"><div class="label">Files</div><div class="value">101</div></div>
+    <div class="card"><div class="label">Symbols</div><div class="value">1411</div></div>
+    <div class="card"><div class="label">Edges</div><div class="value">2602</div></div>
+    <div class="card"><div class="label">Communities</div><div class="value">80</div></div>
+    <div class="card"><div class="label">Processes</div><div class="value">100</div></div>
+  </div>
+  <p class="muted">Indexed at <code>2026-07-10T19:04:12.738Z</code> · <span class="badge fresh">clean — 0 cycles</span></p>
+
+  <h3>Symbol breakdown</h3>
+  <div class="symbol-row"><span class="symbol-kind">Class</span><div class="bar-track"><div class="bar-fill" style="width:16%"></div><span class="bar-label">67</span></div></div><div class="symbol-row"><span class="symbol-kind">Method</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div><span class="bar-label">416</span></div></div><div class="symbol-row"><span class="symbol-kind">Interface</span><div class="bar-track"><div class="bar-fill" style="width:3%"></div><span class="bar-label">11</span></div></div><div class="symbol-row"><span class="symbol-kind">File</span><div class="bar-track"><div class="bar-fill" style="width:24%"></div><span class="bar-label">101</span></div></div>
+
+  <h3>Functional clusters</h3>
+  <div class="table-wrap">
+  <table data-sortable>
+    <thead><tr><th data-type="text">Cluster</th><th class="num" data-type="num">Symbols</th><th data-type="num">Distribution</th><th class="num" data-type="num">Cohesion</th></tr></thead>
+    <tbody><tr><td>Service</td><td class="num">238</td><td><div class="bar-track"><div class="bar-fill" style="width:100%"></div><span class="bar-label">238</span></div></td><td class="num">87.6%</td></tr><tr><td>Repository</td><td class="num">57</td><td><div class="bar-track"><div class="bar-fill" style="width:24%"></div><span class="bar-label">57</span></div></td><td class="num">99.7%</td></tr><tr><td>Controller</td><td class="num">22</td><td><div class="bar-track"><div class="bar-fill" style="width:9%"></div><span class="bar-label">22</span></div></td><td class="num">100.0%</td></tr><tr><td>Scripts</td><td class="num">10</td><td><div class="bar-track"><div class="bar-fill" style="width:4%"></div><span class="bar-label">10</span></div></td><td class="num">81.3%</td></tr><tr><td>Model</td><td class="num">9</td><td><div class="bar-track"><div class="bar-fill" style="width:4%"></div><span class="bar-label">9</span></div></td><td class="num">80.0%</td></tr><tr><td>Exception</td><td class="num">5</td><td><div class="bar-track"><div class="bar-fill" style="width:2%"></div><span class="bar-label">5</span></div></td><td class="num">100.0%</td></tr></tbody>
+  </table>
+  </div>
+
+  <h3>Process intelligence</h3>
+  <div class="mix"><div class="mix-item"><strong>cross_community</strong><span class="num">38</span></div><div class="mix-item"><strong>intra_community</strong><span class="num">62</span></div></div>
+  <div class="table-wrap">
+  <table data-sortable>
+    <thead><tr><th data-type="text">Process</th><th data-type="text">Type</th><th class="num" data-type="num">Steps</th></tr></thead>
+    <tbody><tr><td>ValidateClassification → IsRestrictedAlgorithm</td><td><span class="badge type-cross">cross_community</span></td><td class="num">7</td></tr><tr><td>CreateEccn → EccnException</td><td><span class="badge type-cross">cross_community</span></td><td class="num">6</td></tr><tr><td>UpdateEccn → EccnException</td><td><span class="badge type-intra">intra_community</span></td><td class="num">6</td></tr><tr><td>ValidateClassification → GetLibraryKeyLength</td><td><span class="badge type-cross">cross_community</span></td><td class="num">6</td></tr><tr><td>ValidateClassification → GetLibraryAlgorithm</td><td><span class="badge type-cross">cross_community</span></td><td class="num">6</td></tr><tr><td>CreateEccn → InvalidEccnFormatException</td><td><span class="badge type-cross">cross_community</span></td><td class="num">5</td></tr><tr><td>SearchEccns → FindByCategory</td><td><span class="badge type-intra">intra_community</span></td><td class="num">5</td></tr><tr><td>SearchEccns → FindByControlReasonsContaining</td><td><span class="badge type-intra">intra_community</span></td><td class="num">5</td></tr><tr><td>UpdateEccn → InvalidEccnFormatException</td><td><span class="badge type-intra">intra_community</span></td><td class="num">5</td></tr><tr><td>ProvideClarification → IsEmpty</td><td><span class="badge type-cross">cross_community</span></td><td class="num">5</td></tr><tr><td>CompileReleaseDetails → IsEmpty</td><td><span class="badge type-intra">intra_community</span></td><td class="num">5</td></tr><tr><td>SubmitClassificationRequest → IsEmpty</td><td><span class="badge type-intra">intra_community</span></td><td class="num">5</td></tr><tr><td>CreateEntry → GetTerm</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>CreateEntry → GetDefinition</td><td><span class="badge type-cross">cross_community</span></td><td class="num">4</td></tr><tr><td>CreateEntry → GetCategory</td><td><span class="badge type-cross">cross_community</span></td><td class="num">4</td></tr><tr><td>CreateEntry → GlossaryException</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>CreateEntry → FindByTerm</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>ClassifyCryptography → IsRestrictedAlgorithm</td><td><span class="badge type-cross">cross_community</span></td><td class="num">4</td></tr><tr><td>ImportBulkEntries → GetTerm</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>ImportBulkEntries → GetDefinition</td><td><span class="badge type-cross">cross_community</span></td><td class="num">4</td></tr><tr><td>ImportBulkEntries → GetCategory</td><td><span class="badge type-cross">cross_community</span></td><td class="num">4</td></tr><tr><td>ImportBulkEntries → GlossaryException</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>ImportBulkEntries → FindByTerm</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>UpdateProduct → ProductEvent</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>MarkVersionAsClassified → ProductEvent</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>GenerateClassificationReport → FindByModuleName</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>GetAllEccns → FindByCategory</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>GetAllEccns → FindByControlReasonsContaining</td><td><span class="badge type-intra">intra_community</span></td><td class="num">4</td></tr><tr><td>LoadInitialData → GetTerm</td><td><span class="badge type-cross">cross_community</span></td><td class="num">4</td></tr><tr><td>LoadInitialData → GetDefinition</td><td><span class="badge type-cross">cross_community</span></td><td class="num">4</td></tr></tbody>
+  </table>
+  </div>
+
+  <h3>Working-tree change impact</h3>
+  <div class="health-row">
+    <span>Risk: <span class="badge risk-low">low</span></span>
+    <span class="muted">2 files · 2 symbols · 0 affected processes</span>
+  </div>
+  <div class="table-wrap">
+  <table data-sortable>
+    <thead><tr><th data-type="text">Symbol</th><th data-type="text">File</th></tr></thead>
+    <tbody><tr><td>GitNexus — Code Intelligence</td><td><code>AGENTS.md</code></td></tr><tr><td>GitNexus — Code Intelligence</td><td><code>CLAUDE.md</code></td></tr></tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+<footer>
+  <p>
+    Regenerated with <code>python scripts/generate_gitnexus_dashboard.py</code>.
+    Interactive graph exploration: <code>node .gitnexus/run.cjs serve</code> →
+    <a href="https://gitnexus.vercel.app" rel="noopener noreferrer">gitnexus.vercel.app</a>.
+  </p>
+</footer>
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: "dark",
+  securityLevel: "loose",
+  flowchart: { htmlLabels: true, curve: "basis" },
+  classDiagram: { useMaxWidth: true }
+});
+(function () {
+  function cellValue(td, type) {
+    var text = (td.textContent || "").trim();
+    if (type === "num") {
+      var m = text.replace(/[^0-9.+-]/g, "");
+      var n = parseFloat(m);
+      return isNaN(n) ? 0 : n;
+    }
+    return text.toLowerCase();
+  }
+  document.querySelectorAll("table[data-sortable]").forEach(function (table) {
+    var headers = table.querySelectorAll("thead th");
+    headers.forEach(function (th, colIndex) {
+      th.addEventListener("click", function () {
+        var type = th.getAttribute("data-type") || "text";
+        var tbody = table.tBodies[0];
+        if (!tbody) return;
+        var rows = Array.prototype.slice.call(tbody.rows);
+        var asc = !th.classList.contains("sorted-asc");
+        headers.forEach(function (h) { h.classList.remove("sorted-asc", "sorted-desc"); });
+        th.classList.add(asc ? "sorted-asc" : "sorted-desc");
+        rows.sort(function (a, b) {
+          var av = cellValue(a.cells[colIndex], type);
+          var bv = cellValue(b.cells[colIndex], type);
+          if (av < bv) return asc ? -1 : 1;
+          if (av > bv) return asc ? 1 : -1;
+          return 0;
+        });
+        rows.forEach(function (row) { tbody.appendChild(row); });
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

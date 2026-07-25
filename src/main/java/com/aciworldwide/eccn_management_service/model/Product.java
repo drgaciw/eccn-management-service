@@ -2,15 +2,22 @@ package com.aciworldwide.eccn_management_service.model;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
 @Data
 @Document(collection = "products")
+@CompoundIndexes({
+    @CompoundIndex(name = "product_status_name_idx", def = "{'status': 1, 'name': 1}")
+})
 public class Product {
     @Id
     private String id;
+    @Indexed(unique = true)
     private String name;
     private String description;
     private List<String> features;

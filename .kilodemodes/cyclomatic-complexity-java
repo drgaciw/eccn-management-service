@@ -1,0 +1,82 @@
+---
+name: cyclomatic-complexity-java
+description: Measure McCabe's cyclomatic complexity v(G) for Java source code. Use when Claude needs to analyze code complexity, identify methods requiring refactoring, assess testing requirements, or generate complexity reports. Triggers include requests to measure complexity, analyze Java code quality, find high-complexity methods, assess testability, or generate metrics reports for Java projects.
+---
+
+# Cyclomatic Complexity Analyzer for Java
+
+Measures McCabe's cyclomatic complexity: **v(G) = decision points + 1**
+
+## Quick Start
+
+Analyze a single file:
+```bash
+python scripts/analyze_complexity.py path/to/File.java
+```
+
+Analyze a directory recursively:
+```bash
+python scripts/analyze_complexity.py src/ --recursive
+```
+
+## Output Formats
+
+**Text (default)**: Human-readable report with risk indicators
+```bash
+python scripts/analyze_complexity.py src/ --format text
+```
+
+**JSON**: Machine-readable for integration
+```bash
+python scripts/analyze_complexity.py src/ --format json
+```
+
+**CSV**: Spreadsheet-compatible
+```bash
+python scripts/analyze_complexity.py src/ --format csv
+```
+
+## Common Options
+
+| Option | Description |
+|--------|-------------|
+| `--threshold N` | Set warning threshold (default: 10) |
+| `--recursive` | Scan directories recursively |
+| `--summary` | Show only summary statistics |
+| `--verbose` | Show decision point details |
+
+## Risk Levels
+
+| Complexity | Level | Action |
+|------------|-------|--------|
+| 1-5 | Low ✓ | No action needed |
+| 6-10 | Moderate ○ | Monitor |
+| 11-20 | High ● | Consider refactoring |
+| 21+ | Very High ⚠ | Must refactor |
+
+## Exit Codes
+
+- `0`: Success, all methods within threshold
+- `1`: Error (file not found, parse error)
+- `2`: Success, but methods exceed threshold
+
+## Examples
+
+Find all high-complexity methods:
+```bash
+python scripts/analyze_complexity.py src/ --recursive --threshold 15
+```
+
+Generate JSON report for CI/CD:
+```bash
+python scripts/analyze_complexity.py src/ --recursive --format json > complexity.json
+```
+
+Quick summary only:
+```bash
+python scripts/analyze_complexity.py src/ --recursive --summary
+```
+
+## Reference
+
+For complexity interpretation and refactoring guidance, see `references/complexity-guide.md`

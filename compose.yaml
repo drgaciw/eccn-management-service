@@ -3,7 +3,7 @@ services:
     image: mongo:7.0
     container_name: eccn_mongodb
     ports:
-      - "27018:27017"
+      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: secret
@@ -19,15 +19,19 @@ services:
     image: eccn-management-service:latest
     build: .
     ports:
-      - "8081:8080"
+      - "8080:8080"
     environment:
-      SPRING_DATA_MONGODB_URI: mongodb://root:secret@mongodb:27017/eccn_management?authSource=admin
-      SPRING_SECURITY_USER_NAME: admin
-      SPRING_SECURITY_USER_PASSWORD: admin
-      SPRING_SECURITY_USER_ROLES: ADMIN,USER
+      SPRING_MONGODB_URI: mongodb://root:secret@mongodb:27017/eccn_management?authSource=admin
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     depends_on:
       mongodb:
         condition: service_healthy
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.156.0
+    ports:
+      - "4317:4317"
+      - "4318:4318"
 
 volumes:
   mongodb_data:

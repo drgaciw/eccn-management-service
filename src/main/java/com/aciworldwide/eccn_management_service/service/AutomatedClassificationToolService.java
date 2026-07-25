@@ -1,30 +1,52 @@
 package com.aciworldwide.eccn_management_service.service;
 
 import com.aciworldwide.eccn_management_service.repository.ClassificationHistoryRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 @Service
+@Transactional(readOnly = true)
 public class AutomatedClassificationToolService {
     private static final Logger logger = LoggerFactory.getLogger(AutomatedClassificationToolService.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final Pattern ECCN_CODE = Pattern.compile("^(\\d[A-Z]\\d{3}|EAR99)$");
 
     private final ClassificationHistoryRepository classificationHistoryRepository;
     private final CryptoClassificationService cryptoClassificationService;
-    private AIModel aiModel;
+    private final ChatClient chatClient;
 
     public AutomatedClassificationToolService(
             ClassificationHistoryRepository classificationHistoryRepository,
-            CryptoClassificationService cryptoClassificationService) {
+            CryptoClassificationService cryptoClassificationService,
+            @Autowired(required = false) @Qualifier("claudeClient") ChatClient chatClient) {
         this.classificationHistoryRepository = Objects.requireNonNull(classificationHistoryRepository, "ClassificationHistoryRepository must not be null");
         this.cryptoClassificationService = Objects.requireNonNull(cryptoClassificationService, "CryptoClassificationService must not be null");
+        this.chatClient = chatClient;
+        if (chatClient == null) {
+            logger.warn("ChatClient not configured — AI-based classification will be unavailable. "
+                + "Set ANTHROPIC_API_KEY to enable LLM classification features.");
+        }
     }
 
+    @Document
     public static class ModuleAnalysis {
+        @Id
+        private String id;
         private String moduleName;
         private ModuleType moduleType;
         private List<String> encryptionLibraries;
@@ -37,7 +59,8 @@ public class AutomatedClassificationToolService {
             SOURCE_CODE, SOFTWARE_PACKAGE
         }
 
-        // Getters and setters
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
         public String getModuleName() { return moduleName; }
         public void setModuleName(String moduleName) { this.moduleName = moduleName; }
         public ModuleType getModuleType() { return moduleType; }
@@ -54,14 +77,6 @@ public class AutomatedClassificationToolService {
         public void setClassificationRationale(String classificationRationale) { this.classificationRationale = classificationRationale; }
     }
 
-    /**
-     * Analyzes source code for cryptographic libraries and payment processing capabilities.
-     * @param repositoryUrl URL of the source code repository
-     * @param branch Branch to analyze
-     * @param commit Commit hash to analyze
-     * @return ModuleAnalysis containing the analysis results
-     * @throws IllegalArgumentException if any parameter is null or empty
-     */
     public ModuleAnalysis analyzeSourceCode(String repositoryUrl, String branch, String commit) {
         validateInputParameters(repositoryUrl, branch, commit);
         logger.info("Analyzing source code: {}:{}:{}", repositoryUrl, branch, commit);
@@ -69,20 +84,13 @@ public class AutomatedClassificationToolService {
         ModuleAnalysis analysis = new ModuleAnalysis();
         analysis.setModuleName(repositoryUrl + ":" + branch + ":" + commit);
         analysis.setModuleType(ModuleAnalysis.ModuleType.SOURCE_CODE);
-        
+
         Map<String, Object> analysisResult = analyzeSourceCodeContent(repositoryUrl, branch, commit);
         processAnalysisResult(analysis, analysisResult);
-        
+
         return performClassification(analysis);
     }
 
-    /**
-     * Analyzes a software package for cryptographic libraries and payment processing capabilities.
-     * @param packageName Name of the software package
-     * @param packageType Type of the software package
-     * @return ModuleAnalysis containing the analysis results
-     * @throws IllegalArgumentException if any parameter is null or empty
-     */
     public ModuleAnalysis analyzeSoftwarePackage(String packageName, String packageType) {
         validateInputParameters(packageName, packageType);
         logger.info("Analyzing software package: {}:{}", packageName, packageType);
@@ -90,10 +98,10 @@ public class AutomatedClassificationToolService {
         ModuleAnalysis analysis = new ModuleAnalysis();
         analysis.setModuleName(packageName);
         analysis.setModuleType(ModuleAnalysis.ModuleType.SOFTWARE_PACKAGE);
-        
+
         Map<String, Object> analysisResult = analyzePackageContent(packageName, packageType);
         processAnalysisResult(analysis, analysisResult);
-        
+
         return performClassification(analysis);
     }
 
@@ -112,12 +120,6 @@ public class AutomatedClassificationToolService {
         analysis.setHasPaymentProcessing((boolean) analysisResult.get("hasPaymentProcessing"));
     }
 
-    /**
-     * Validates a proposed ECCN classification against the module's analysis.
-     * @param moduleName Name of the module to validate
-     * @param proposedECCN Proposed ECCN classification
-     * @return true if the proposed classification matches the analysis, false otherwise
-     */
     public boolean validateClassification(String moduleName, String proposedECCN) {
         Objects.requireNonNull(moduleName, "Module name cannot be null");
         Objects.requireNonNull(proposedECCN, "Proposed ECCN cannot be null");
@@ -127,42 +129,64 @@ public class AutomatedClassificationToolService {
             logger.warn("No analysis found for module: {}", moduleName);
             return false;
         }
-        
-        // Get the classification and ensure it's not null
+
         String classification = determineClassification(analysis.getEncryptionLibraries(), analysis.isHasPaymentProcessing());
         if (classification == null) {
             logger.warn("Could not determine classification for module: {}", moduleName);
             return false;
         }
-        
-        // Compare the proposed ECCN with the determined classification
+
         return classification.equals(proposedECCN);
     }
 
-    /**
-     * Suggests possible ECCN classifications for a module.
-     * @param moduleName Name of the module to suggest classifications for
-     * @return Map of suggested ECCN classifications with confidence scores
-     */
     public Map<String, Double> suggestECCN(String moduleName) {
         Objects.requireNonNull(moduleName, "Module name cannot be null");
 
         ModuleAnalysis analysis = getLatestAnalysis(moduleName);
-        if (analysis == null || aiModel == null) {
-            logger.warn("No analysis or AI model available for module: {}", moduleName);
+        if (analysis == null) {
+            logger.warn("No analysis available for module: {}", moduleName);
             return Map.of();
         }
-        return aiModel.suggestClassifications(
-                analysis.getEncryptionLibraries(),
-                analysis.isHasPaymentProcessing()
-        );
+        if (chatClient == null) {
+            logger.warn("ChatClient not configured for module: {}", moduleName);
+            return Map.of();
+        }
+        try {
+            String response = chatClient.prompt()
+                .user(getSuggestionPrompt(analysis))
+                .call()
+                .content();
+            return parseSuggestions(response);
+        } catch (Exception e) {
+            logger.error("AI suggestion failed for {}: {}", moduleName, e.getMessage());
+            return Map.of();
+        }
     }
 
-    /**
-     * Generates a detailed classification report for a module.
-     * @param moduleName Name of the module to generate the report for
-     * @return String containing the classification report
-     */
+    private String getSuggestionPrompt(ModuleAnalysis analysis) {
+        return String.format(
+            "Suggest ECCN classifications with confidence scores (0.0-1.0) for a module with: "
+            + "encryption libraries=%s, payment processing=%s, type=%s. "
+            + "Respond with JSON: {\"5A002\": 0.85, \"5D992\": 0.60, \"EAR99\": 0.40}",
+            analysis.getEncryptionLibraries(), analysis.isHasPaymentProcessing(),
+            analysis.getModuleType());
+    }
+
+    private Map<String, Double> parseSuggestions(String response) {
+        try {
+            String json = response.trim();
+            int braceStart = json.indexOf('{');
+            int braceEnd = json.lastIndexOf('}');
+            if (braceStart >= 0 && braceEnd > braceStart) {
+                return MAPPER.readValue(json.substring(braceStart, braceEnd + 1),
+                        new TypeReference<LinkedHashMap<String, Double>>() {});
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to parse AI suggestion response ({} chars)", response == null ? 0 : response.length());
+        }
+        return new LinkedHashMap<>();
+    }
+
     public String generateClassificationReport(String moduleName) {
         Objects.requireNonNull(moduleName, "Module name cannot be null");
 
@@ -181,11 +205,8 @@ public class AutomatedClassificationToolService {
                 analysis.getAnalysisTimestamp());
     }
 
-    public void integrateAIModel(AIModel model) {
-        this.aiModel = Objects.requireNonNull(model, "AI model cannot be null");
-    }
-
-    private ModuleAnalysis performClassification(ModuleAnalysis analysis) {
+    @Transactional
+    public ModuleAnalysis performClassification(ModuleAnalysis analysis) {
         analysis.setAnalysisTimestamp(LocalDateTime.now());
         String classification = determineClassification(
                 analysis.getEncryptionLibraries(),
@@ -193,43 +214,82 @@ public class AutomatedClassificationToolService {
         );
         analysis.setEccnClassification(classification);
         analysis.setClassificationRationale(generateClassificationRationale(analysis));
-        
+
         classificationHistoryRepository.save(analysis);
         return analysis;
     }
 
-    /**
-     * Determines the ECCN classification based on encryption libraries and payment processing.
-     * @param encryptionLibraries List of encryption libraries used
-     * @param hasPaymentProcessing Whether the module has payment processing capabilities
-     * @return String representing the ECCN classification
-     */
     public String determineClassification(List<String> encryptionLibraries, boolean hasPaymentProcessing) {
-        if (encryptionLibraries == null || encryptionLibraries.isEmpty()) {
-            return hasPaymentProcessing ? "5A002" : "EAR99";
+        if (hasNoEncryptionLibraries(encryptionLibraries)) {
+            return determineClassificationForNoEncryption(hasPaymentProcessing);
         }
 
-        // If AI model is available, use it for classification
-        if (aiModel != null) {
-            String aiClassification = aiModel.classify(encryptionLibraries, hasPaymentProcessing);
-            if (aiClassification != null) {
-                return aiClassification;
+        String aiClassification = attemptAIClassification(encryptionLibraries, hasPaymentProcessing);
+        if (aiClassification != null) {
+            return aiClassification;
+        }
+
+        String cryptoClassification = attemptCryptoServiceClassification(encryptionLibraries);
+        if (cryptoClassification != null) {
+            return cryptoClassification;
+        }
+
+        return determineFallbackClassification(hasPaymentProcessing);
+    }
+
+    private boolean hasNoEncryptionLibraries(List<String> encryptionLibraries) {
+        return encryptionLibraries == null || encryptionLibraries.isEmpty();
+    }
+
+    private String determineClassificationForNoEncryption(boolean hasPaymentProcessing) {
+        return hasPaymentProcessing ? "5A002" : "EAR99";
+    }
+
+    private String attemptAIClassification(List<String> encryptionLibraries, boolean hasPaymentProcessing) {
+        if (chatClient == null) {
+            return null;
+        }
+        try {
+            String prompt = String.format(
+                "Classify this software module for ECCN export control. "
+                + "Encryption libraries: %s. Payment processing: %s. "
+                + "Return ONLY a single ECCN code (e.g., 5A002, 5D992, EAR99) with no explanation.",
+                encryptionLibraries, hasPaymentProcessing);
+            String response = chatClient.prompt().user(prompt).call().content();
+            if (response == null) {
+                return null;
             }
+            String trimmed = response.trim();
+            if (!ECCN_CODE.matcher(trimmed).matches()) {
+                logger.warn("AI classification returned non-ECCN response, falling back to deterministic classification");
+                return null;
+            }
+            return trimmed;
+        } catch (Exception e) {
+            logger.error("AI classification failed: {}", e.getMessage());
+            return null;
         }
+    }
 
-        // Default classification logic
+    private String attemptCryptoServiceClassification(List<String> encryptionLibraries) {
         for (String library : encryptionLibraries) {
-            String tempResult = cryptoClassificationService.classifyCryptography(
-                    getLibraryKeyLength(library),
-                    getAlgorithmForLibrary(library),
-                    false
-            );
-            if (tempResult != null) {
-                return tempResult; // Return the classification from the crypto service
+            String classification = classifySingleLibrary(library);
+            if (classification != null) {
+                return classification;
             }
         }
+        return null;
+    }
 
-        // If no specific classification found, return EAR99 or 5A002 based on payment processing
+    private String classifySingleLibrary(String library) {
+        return cryptoClassificationService.classifyCryptography(
+                getLibraryKeyLength(library),
+                getAlgorithmForLibrary(library),
+                false
+        );
+    }
+
+    private String determineFallbackClassification(boolean hasPaymentProcessing) {
         return hasPaymentProcessing ? "5A002" : "EAR99";
     }
 
@@ -274,21 +334,13 @@ public class AutomatedClassificationToolService {
     }
 
     private void sendClassificationChangeAlert(String moduleName, String oldClassification, String newClassification) {
-        // Implementation to send alerts
     }
 
     private Map<String, Object> analyzeSourceCodeContent(String repositoryUrl, String branch, String commit) {
-        // Implementation to analyze source code
         return Map.of("encryptionLibraries", List.of(), "hasPaymentProcessing", false);
     }
 
     private Map<String, Object> analyzePackageContent(String packageName, String packageType) {
-        // Implementation to analyze software package
         return Map.of("encryptionLibraries", List.of(), "hasPaymentProcessing", false);
-    }
-
-    public interface AIModel {
-        String classify(List<String> encryptionLibraries, boolean hasPaymentProcessing);
-        Map<String, Double> suggestClassifications(List<String> encryptionLibraries, boolean hasPaymentProcessing);
     }
 }

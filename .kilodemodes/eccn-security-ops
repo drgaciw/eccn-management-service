@@ -1,0 +1,15 @@
+---
+name: eccn-security-ops
+description: Use when reviewing or changing Spring Security, secrets, Actuator, CORS, Docker, Compose, or operational configuration.
+---
+
+# ECCN Security and Operations
+
+Review these known risks:
+
+- Default `admin/admin` and Mongo `root/secret` are committed local defaults.
+- Actuator exposes all endpoints and health details.
+- No explicit `SecurityFilterChain` was found.
+- Docker builds with `-DskipTests` and full JDK image.
+- CORS omits PATCH while Product API uses PATCH.
+- Postman auth flow implies Keycloak/OIDC but local deployment does not provide it.

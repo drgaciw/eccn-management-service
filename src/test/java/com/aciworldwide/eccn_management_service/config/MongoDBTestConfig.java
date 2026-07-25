@@ -1,37 +1,36 @@
 package com.aciworldwide.eccn_management_service.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration
 public class MongoDBTestConfig {
-    
-    private static final MongoDBContainer mongoDBContainer;
+
+    private static final Logger logger = LoggerFactory.getLogger(MongoDBTestConfig.class);
 
     static {
-        mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6.0")) {
-            @Override
-            public void close() {
-                super.stop();
-            }
-        }
-                .withExposedPorts(27017);
-        mongoDBContainer.start();
+        String dockerSocket = isWindows()
+                ? "npipe:////./pipe/docker_engine"
+                : "unix:///var/run/docker.sock";
+        System.setProperty("testcontainers.docker.socket", dockerSocket);
+        logger.info("Configured Testcontainers Docker socket: {}", dockerSocket);
     }
 
-    @DynamicPropertySource
-    static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+    private static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("windows");
     }
 
     @Bean
-    @Primary
-    public MongoDBContainer mongoDBContainer() {
-        return mongoDBContainer;
+    @ServiceConnection
+    MongoDBContainer mongoDBContainer() {
+        return new MongoDBContainer(DockerImageName.parse("mongo:7.0"))
+                .withLogConsumer(new Slf4jLogConsumer(logger))
+                .withReuse(true);
     }
 }

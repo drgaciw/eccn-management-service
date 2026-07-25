@@ -1,0 +1,22 @@
+---
+name: eccn-testing-validation
+description: Use before claiming ECCN service changes compile, tests pass, validation is complete, or build failures are fixed.
+---
+
+# ECCN Testing and Validation
+
+Commands:
+
+```bash
+./mvnw -q -DskipTests compile
+./mvnw test
+python scripts/analyze_complexity.py src/ --recursive --summary
+```
+
+Rules:
+
+- Prefer `./mvnw`.
+- Start with the smallest meaningful command.
+- Separate baseline compile failures from introduced regressions.
+- Use JUnit 5, Mockito, Spring Boot Test, Reactor Test, and Testcontainers MongoDB patterns already in the repo.
+- Never claim success without fresh logs.
