@@ -13,21 +13,21 @@ The ECCN Management Service is a comprehensive solution for managing and trackin
 - Product portfolio management
 
 ## Technology Stack
-- **Backend**: Spring Boot 3.x
+- **Backend**: Spring Boot 4.0.7
 - **Database**: MongoDB
 - **API Documentation**: Springdoc OpenAPI
-- **Testing**: JUnit 5, MockMvc
+- **Testing**: JUnit 5, Mockito, Testcontainers
 - **Containerization**: Docker
-- **CI/CD**: GitHub Actions
 - **Monitoring**: Spring Boot Actuator
 
 ## Getting Started
 
 ### Prerequisites
-- Java 17 or later
-- Maven 3.8+
-- MongoDB 6.0+
+- Java 21
+- MongoDB 7.0+
 - Docker (optional)
+
+> The project bundles a Maven wrapper (`./mvnw`), so a local Maven install is optional.
 
 ### Installation
 1. Clone the repository:
@@ -40,20 +40,39 @@ The ECCN Management Service is a comprehensive solution for managing and trackin
    ```
 3. Build the project:
    ```bash
-   mvn clean install
+   ./mvnw clean install
    ```
 4. Run the application:
    ```bash
-   mvn spring-boot:run
+   ./mvnw spring-boot:run
    ```
 
 ### Docker Setup
 ```bash
-docker-compose up -d
+docker compose up -d
+```
+
+## Configuration
+MongoDB connection and admin credentials are externalized via environment variables, each with a safe local default:
+
+| Variable | Description | Local default |
+|----------|-------------|---------------|
+| `SPRING_DATA_MONGODB_URI` | MongoDB connection URI | `mongodb://localhost:27017/eccn_management` |
+| `MONGODB_USERNAME` | MongoDB username | `root` |
+| `MONGODB_PASSWORD` | MongoDB password | `secret` |
+| `SECURITY_ADMIN_NAME` | HTTP Basic admin username | `admin` |
+| `SECURITY_ADMIN_PASSWORD` | HTTP Basic admin password | `admin` (noop-encoded) |
+
+## Build & Test
+```bash
+./mvnw clean verify
 ```
 
 ## API Documentation
-The API documentation is available at `http://localhost:8080/swagger-ui.html` when the application is running.
+The API documentation is available at `http://localhost:8080/swagger-ui.html` when the application is running. Use the **Authorize** button to authenticate with HTTP Basic credentials.
+
+## Security
+The API is secured with HTTP Basic authentication (in-memory user). JWT/OIDC support is a planned future addition.
 
 ## Contribution Guidelines
 1. Fork the repository

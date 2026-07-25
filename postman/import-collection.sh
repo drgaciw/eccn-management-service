@@ -7,7 +7,7 @@ then
     npm install -g newman
 fi
 
-# Import collection and set environment variables
+# Run the collection tests and export the test report
 newman run "postman/ECCN-Management.postman_collection.json" \
     --env-var "auth_url=http://localhost:8081/auth" \
     --env-var "product_service_url=http://localhost:8080" \
@@ -17,4 +17,4 @@ newman run "postman/ECCN-Management.postman_collection.json" \
     --reporters cli,json \
     --reporter-json-export "postman/report.json"
 
-echo "Collection imported successfully. Test report saved to postman/report.json"
+echo "Collection tests completed. Test report saved to postman/report.json"

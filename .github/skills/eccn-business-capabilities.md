@@ -1,0 +1,32 @@
+---
+name: eccn-business-capabilities
+description: Use when mapping ECCN Management Service requirements to business capabilities, implemented source behavior, target processes, or capability-specific agents.
+---
+
+# ECCN Business Capabilities
+
+## Common ECCN business rules
+
+- Outputs are decision support, not legal advice or final export-control determinations.
+- Require qualified human compliance approval before final ECCN, `CLASSIFIED` status, compliance approval, report issuance, archival/deletion, external publication, or high-risk mitigation closure.
+- Do not override explicit compliance-manager decisions; raise conflicts with evidence.
+- Every recommendation must include inputs, source references, rationale, assumptions, uncertainty, and missing-data checklist.
+- Preserve auditability: actor, role, timestamp, action, status transition, before/after summary, evidence references, rationale, approver, and correlation/request ID.
+- Verify implemented-vs-target status before recommending APIs or automation.
+- Minimize sensitive evidence; do not expose proprietary source, credentials, customer identifiers, or secrets beyond approved boundaries.
+
+
+## Capability agents
+
+- `eccn-record-management-capability` — ECCN record management (Implemented REST capability)
+- `eccn-product-classification-capability` — product/version classification tracking (Implemented REST capability)
+- `eccn-crypto-classification-capability` — cryptographic classification triage (Implemented REST capability)
+- `eccn-glossary-capability` — compliance glossary governance (Implemented REST capability)
+- `eccn-compliance-documentation-capability` — compliance documentation evidence and retention (Target/partial service-layer capability; no public REST controller currently verified)
+- `eccn-risk-assessment-capability` — export-control risk assessment scoring (Target/partial service-layer capability; no public REST controller currently verified)
+- `eccn-export-control-capability` — jurisdictional export-control records (Target/partial service-layer capability; no public REST controller currently verified)
+- `eccn-classification-workflow-capability` — release-to-compliance classification workflow (Target/partial in-memory service-layer capability; no public REST controller/persistence currently verified)
+- `eccn-automated-classification-capability` — AI-assisted and automated classification evidence (Target/partial/stubbed capability; no public REST controller/concrete AI currently verified)
+- `eccn-enterprise-integration-capability` — external ECCN validation and enterprise system integration (Declared interface/stub capability; no concrete adapters currently verified)
+
+Use `prd.md` as the product source of truth and `tech-stack.md` for runtime status. Treat service-layer-only areas as target/partial until controllers, tests, authorization, and OpenAPI are verified.

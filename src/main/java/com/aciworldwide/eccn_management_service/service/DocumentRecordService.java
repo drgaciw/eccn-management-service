@@ -14,6 +14,7 @@ import java.util.UUID;
 import java.util.Arrays;
 
 @Service
+@Transactional(readOnly = true)
 public class DocumentRecordService {
 
     private final DocumentRecordRepository documentRecordRepository;
@@ -58,6 +59,7 @@ public class DocumentRecordService {
         return documentRecordRepository.findByDocumentTypeAndAssociatedModule(documentType, moduleName);
     }
 
+    @Transactional
     public DocumentRecord generateDocument(String templateName, Map<String, String> data) {
         return storeDocument("Generated", templateName, "Auto-generated document",
                 "System", "Templates", "N/A", "System");

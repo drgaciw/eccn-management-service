@@ -31,6 +31,10 @@ class EccnServiceTest {
     void createEccn_validFormat_shouldSave() {
         Eccn eccn = new Eccn();
         eccn.setCommodityCode("5D002");
+        eccn.setCategory("5");
+        eccn.setSubCategory("D");
+        eccn.setControlReasons(Arrays.asList("NS", "AT"));
+        eccn.setDescription("This is a test description for encryption software");
         when(eccnRepository.save(any(Eccn.class))).thenReturn(eccn);
 
         Eccn result = eccnService.createEccn(eccn);
@@ -94,8 +98,18 @@ class EccnServiceTest {
     void bulkCreateEccn_validList_shouldSaveAll() {
         Eccn eccn1 = new Eccn();
         eccn1.setCommodityCode("5D002");
+        eccn1.setCategory("5");
+        eccn1.setSubCategory("D");
+        eccn1.setControlReasons(Arrays.asList("NS", "AT"));
+        eccn1.setDescription("This is a test description for encryption software");
+        
         Eccn eccn2 = new Eccn();
         eccn2.setCommodityCode("5A002");
+        eccn2.setCategory("5");
+        eccn2.setSubCategory("A");
+        eccn2.setControlReasons(Arrays.asList("NS", "AT"));
+        eccn2.setDescription("This is a test description for encryption hardware");
+        
         when(eccnRepository.saveAll(anyList())).thenReturn(Arrays.asList(eccn1, eccn2));
 
         List<Eccn> result = eccnService.bulkCreateEccn(Arrays.asList(eccn1, eccn2));

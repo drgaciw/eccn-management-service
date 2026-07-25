@@ -1,0 +1,20 @@
+---
+name: gitnexus-java-change-safety
+description: Use before editing Java classes, methods, repositories, controllers, services, models, config beans, or API contracts in this repository.
+---
+
+# GitNexus Java Change Safety
+
+Before editing a Java symbol or public API contract:
+
+1. Identify exact class/method/repository/controller/service/model/config target.
+2. Run GitNexus upstream impact analysis when available.
+3. Report direct callers, affected execution flows, and risk level.
+4. Stop for approval on HIGH or CRITICAL risk.
+5. Never rename symbols with plain text search/replace.
+
+After edits:
+
+1. Run GitNexus `detect_changes()` when available.
+2. Run targeted Maven validation.
+3. Report exact command output summary.

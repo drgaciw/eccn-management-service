@@ -3,6 +3,7 @@ package com.aciworldwide.eccn_management_service.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.Map;
 public class ExportControl {
     @Id
     private String id;
+    @Indexed(unique = true)
     private String moduleName;
     private String earClassification;
     private Map<String, String> jurisdictionClassifications; // Key: jurisdiction, Value: classification

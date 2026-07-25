@@ -3,6 +3,7 @@ package com.aciworldwide.eccn_management_service.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
@@ -19,14 +20,25 @@ import java.util.UUID;
 public class DocumentRecord {
     @Id
     private UUID id;
+    
+    @Indexed
     private String documentType; // e.g., TECHNICAL_SPECS, CLASSIFICATION_JUSTIFICATION
+    
     private String documentName;
     private String description;
     private String storageLocation; // Path or reference to actual document
+    
+    @Indexed
     private String associatedModule; // Related software module
+    
+    @Indexed
     private String eccnClassification; // Related ECCN classification
+    
     private LocalDate creationDate;
+    
+    @Indexed
     private LocalDate expirationDate;
+    
     private String createdBy;
     private boolean archived = false;
     
