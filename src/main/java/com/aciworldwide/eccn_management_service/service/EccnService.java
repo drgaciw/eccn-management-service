@@ -12,6 +12,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
 @Service
@@ -51,6 +53,27 @@ public class EccnService {
             throw new EccnValidationException("ECCN cannot be null");
         }
 
+        // Normalize aliases before validation:
+        // - commodityCode may arrive as JsonAlias eccnCode
+        // - code may be populated without commodityCode
+        // - singular controlReason string (Angular form) → controlReasons list
+        if (eccn.getCommodityCode() == null || eccn.getCommodityCode().isBlank()) {
+            if (eccn.getCode() != null && !eccn.getCode().isBlank()) {
+                eccn.setCommodityCode(eccn.getCode().trim());
+            }
+        }
+        if (eccn.getCode() == null || eccn.getCode().isBlank()) {
+            eccn.setCode(eccn.getCommodityCode());
+        }
+        if ((eccn.getControlReasons() == null || eccn.getControlReasons().isEmpty())
+                && eccn.getControlReason() != null && !eccn.getControlReason().isBlank()) {
+            List<String> reasons = Arrays.stream(eccn.getControlReason().split("[,;\\s]+"))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toCollection(ArrayList::new));
+            eccn.setControlReasons(reasons);
+        }
+
         validateEccnCode(eccn.getCommodityCode());
         validateCategory(eccn.getCategory());
         validateSubCategory(eccn.getSubCategory());
@@ -59,7 +82,11 @@ public class EccnService {
     }
 
     private void validateEccnCode(String code) {
-        if (code == null || !ECCN_PATTERN.matcher(code).matches()) {
+        if (code == null || code.isBlank()) {
+            throw new EccnValidationException(
+                    "commodityCode (or eccnCode) is required and must be 5 characters of numbers and uppercase letters");
+        }
+        if (!ECCN_PATTERN.matcher(code).matches()) {
             throw new InvalidEccnFormatException("Invalid ECCN code format. Must be 5 characters of numbers and uppercase letters.");
         }
     }

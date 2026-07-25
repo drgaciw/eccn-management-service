@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,10 +25,19 @@ public class ProductService {
 
     @Transactional
     public Product createProduct(Product product) {
-        // Set initial status and classification status for versions
+        // Set initial status and classification status for versions.
+        // The Angular create form does not send a versions array — tolerate null/empty
+        // so create does not NPE into a generic 500 for the UI.
         product.setStatus("ACTIVE");
-        product.getVersions().forEach(version -> 
-            version.setClassificationStatus("PENDING"));
+        if (product.getVersions() == null) {
+            product.setVersions(java.util.Collections.emptyList());
+        } else {
+            product.getVersions().forEach(version ->
+                version.setClassificationStatus("PENDING"));
+        }
+        if (product.getFeatures() == null) {
+            product.setFeatures(java.util.Collections.emptyList());
+        }
         return productRepository.save(product);
     }
 
@@ -57,6 +67,22 @@ public class ProductService {
                     version.getVersionNumber())));
         
         return updatedProduct;
+    }
+
+    /**
+     * Returns every product. Used by the Angular product list (GET /api/products).
+     */
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
+    public Optional<Product> findById(String id) {
+        return productRepository.findById(id);
+    }
+
+    @Transactional
+    public void deleteProduct(String id) {
+        productRepository.deleteById(id);
     }
 
     public List<Product> getProductsByStatus(String status) {
