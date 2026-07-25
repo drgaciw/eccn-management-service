@@ -3,7 +3,9 @@ package com.aciworldwide.eccn_management_service;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import com.aciworldwide.eccn_management_service.config.MongoDBTestConfig;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@Import(MongoDBTestConfig.class)
 class EccnCreateAliasTest {
 
     @LocalServerPort
