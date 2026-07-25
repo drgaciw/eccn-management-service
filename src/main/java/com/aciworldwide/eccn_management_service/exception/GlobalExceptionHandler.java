@@ -90,6 +90,28 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * {@link InvalidEccnFormatException} extends bare {@code RuntimeException} rather than
+     * {@link EccnException}, so without this handler it falls through to
+     * {@link #handleGenericException} and is reported as an opaque 500 instead of the
+     * validation failure it actually is. GitNexus impact analysis on
+     * {@code InvalidEccnFormatException} showed HIGH risk (11 impacted symbols across
+     * createEccn/updateEccn/bulkCreateEccn/findByCommodityCode), so this handler is added
+     * here instead of changing that class's type hierarchy.
+     */
+    @ExceptionHandler(InvalidEccnFormatException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidEccnFormatException(InvalidEccnFormatException ex) {
+        logger.warn("Invalid ECCN format: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("message", ex.getMessage());
+        response.put("errorCode", "INVALID_FORMAT");
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     private HttpStatus determineHttpStatus(EccnException ex) {
         return switch (ex.getCategory()) {
             case VALIDATION -> HttpStatus.BAD_REQUEST;
