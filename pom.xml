@@ -35,6 +35,33 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<!--
+				Pin swagger-annotations-jakarta to the version springdoc-openapi 3.0.3's
+				swagger-core-jakarta:2.2.47 actually requires. Without this, Maven's
+				"nearest wins" mediation picks up swagger-annotations-jakarta:2.2.38
+				transitively via spring-ai-starter-model-openai -> openai-java-core,
+				which lacks the Schema.$dynamicRef() accessor swagger-core-jakarta:2.2.47
+				calls at runtime, causing /v3/api-docs to fail with NoSuchMethodError.
+			-->
+			<dependency>
+				<groupId>io.swagger.core.v3</groupId>
+				<artifactId>swagger-annotations-jakarta</artifactId>
+				<version>2.2.47</version>
+			</dependency>
+			<!--
+				swagger-annotations (non-jakarta) ships classes in the SAME package
+				(io.swagger.v3.oas.annotations.*) as swagger-annotations-jakarta above.
+				Both artifacts land on the classpath (pulled in by openai-java-core /
+				anthropic-java-core), so this is a split-package situation, not a normal
+				Maven version conflict: pinning only the jakarta artifact does not stop
+				the classloader from picking whichever jar happens to load first. Pin
+				this one to the same version too so both jars are internally consistent.
+			-->
+			<dependency>
+				<groupId>io.swagger.core.v3</groupId>
+				<artifactId>swagger-annotations</artifactId>
+				<version>2.2.47</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -224,4 +251,85 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+			Generates docs/openapi.json from a real running instance of the app.
+
+			Not part of the default build (only active via -Pgenerate-openapi-spec)
+			because it starts the full application during the integration-test phase,
+			which requires a reachable MongoDB instance. `./mvnw test` and a plain
+			`./mvnw verify` are unaffected.
+
+			Usage:
+			  docker run -d rm=true name=openapi-mongo -p 27018:27017 mongo:7.0
+			  ./mvnw -Pgenerate-openapi-spec verify -DskipTests
+			  docker stop openapi-mongo
+
+			(replace rm=true name=openapi-mongo above with the equivalent docker
+			run flags for detached, auto-removed, named container; omitted here
+			verbatim because consecutive hyphens are not permitted inside an XML
+			comment)
+
+			The forked app process is pointed at that container and given dummy Spring
+			AI credentials via jvmArguments below (no real MongoDB / LLM provider
+			calls happen; only route/schema metadata is exercised to build the spec).
+		-->
+		<profile>
+			<id>generate-openapi-spec</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>pre-integration-test</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>start</goal>
+								</goals>
+								<configuration>
+									<jvmArguments>
+										-Dspring.mongodb.uri=mongodb://localhost:27018/eccn_openapi_gen
+										-Dspring.ai.openai.api-key=dummy
+										-Dspring.ai.google.genai.api-key=dummy
+										-Dspring.ai.anthropic.api-key=dummy
+										-Dserver.port=8099
+										-Dspring.application.admin.enabled=true
+									</jvmArguments>
+								</configuration>
+							</execution>
+							<execution>
+								<id>post-integration-test</id>
+								<phase>post-integration-test</phase>
+								<goals>
+									<goal>stop</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.springdoc</groupId>
+						<artifactId>springdoc-openapi-maven-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+								<id>generate-openapi-spec</id>
+								<phase>integration-test</phase>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<apiDocsUrl>http://localhost:8099/v3/api-docs</apiDocsUrl>
+							<outputFileName>openapi.json</outputFileName>
+							<outputDir>${project.basedir}/docs</outputDir>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

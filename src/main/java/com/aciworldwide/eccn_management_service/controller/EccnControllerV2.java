@@ -2,6 +2,7 @@ package com.aciworldwide.eccn_management_service.controller;
 
 import com.aciworldwide.eccn_management_service.model.Eccn;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/eccn")
@@ -20,9 +20,11 @@ public class EccnControllerV2 {
     private final EccnController v1Controller;
 
     @GetMapping
-    @Operation(summary = "Get all ECCNs", description = "Retrieve all ECCN records with optional filtering")
-    public ResponseEntity<List<Eccn>> getAllEccns(@RequestParam(required = false) Map<String, String> params) {
-        return v1Controller.getAllEccns(params);
+    @Operation(summary = "Get all ECCNs", description = "Retrieve all ECCN records, optionally filtered by exact category or by a control reason they contain")
+    public ResponseEntity<List<Eccn>> getAllEccns(
+            @Parameter(description = "Filter by exact category code (e.g. \"5\")") @RequestParam(required = false) String category,
+            @Parameter(description = "Filter by a control reason contained in the record's control reasons (e.g. \"NS\")") @RequestParam(required = false) String controlReason) {
+        return v1Controller.getAllEccns(category, controlReason);
     }
 
     @GetMapping("/{id}")
