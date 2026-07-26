@@ -29,6 +29,19 @@ public class ProductController {
     }
 
     /**
+     * Distinct product categories, for populating the Angular product-create
+     * category select from the database instead of a hardcoded option list.
+     * <p>
+     * Declared before {@code /{id}} for readability only — Spring matches the
+     * literal path ahead of the path variable regardless of declaration order,
+     * so "categories" is never treated as a product id.
+     */
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getCategories() {
+        return ResponseEntity.ok(productService.getDistinctCategories());
+    }
+
+    /**
      * Fetch a single product by id. SIT found clients (and the UI "View" action)
      * calling {@code GET /api/products/{id}} and receiving 405.
      */
