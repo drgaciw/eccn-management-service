@@ -8,6 +8,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -16,9 +18,23 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    /**
+     * Prefer Spring's delegating encoder so local/dev credentials can use {@code {noop}...}
+     * while production-style bcrypt hashes use {@code {bcrypt}...}.
+     * <p>
+     * A bare {@link BCryptPasswordEncoder} bean rejects {@code {noop}admin} (the
+     * application.properties default), which made every "plain" restart look broken:
+     * the app came up but Basic auth always returned 401.
+     * Unprefixed bcrypt hashes (legacy test props) still match via the default-for-matches
+     * fallback.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        PasswordEncoder delegating = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        if (delegating instanceof DelegatingPasswordEncoder dpe) {
+            dpe.setDefaultPasswordEncoderForMatches(new BCryptPasswordEncoder());
+        }
+        return delegating;
     }
 
     @Bean

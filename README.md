@@ -42,10 +42,18 @@ The ECCN Management Service is a comprehensive solution for managing and trackin
    ```bash
    ./mvnw clean install
    ```
-4. Run the application:
+4. Run the application (foreground):
    ```bash
    ./mvnw spring-boot:run
    ```
+   Or use the **detached local restart** script (recommended for IDE/agent shells that
+   otherwise SIGTERM attached `spring-boot:run` processes):
+   ```bash
+   ./scripts/restart-local.sh          # stop + start on :8081
+   ./scripts/restart-local.sh status
+   ./scripts/restart-local.sh stop
+   ```
+   Defaults: HTTP Basic `devuser` / `devpass123`, log at `.local-backend.log`.
 
 ### Docker Setup
 ```bash
@@ -61,7 +69,8 @@ MongoDB connection and admin credentials are externalized via environment variab
 | `MONGODB_USERNAME` | MongoDB username | `root` |
 | `MONGODB_PASSWORD` | MongoDB password | `secret` |
 | `SECURITY_ADMIN_NAME` | HTTP Basic admin username | `admin` |
-| `SECURITY_ADMIN_PASSWORD` | HTTP Basic admin password | `admin` (noop-encoded) |
+| `SECURITY_ADMIN_PASSWORD` | HTTP Basic admin password | `{noop}admin` (delegating encoder) |
+| `SERVER_PORT` | HTTP port | `8081` |
 
 ## Build & Test
 ```bash
@@ -69,10 +78,11 @@ MongoDB connection and admin credentials are externalized via environment variab
 ```
 
 ## API Documentation
-The API documentation is available at `http://localhost:8080/swagger-ui.html` when the application is running. Use the **Authorize** button to authenticate with HTTP Basic credentials.
+The API documentation is available at `http://localhost:8081/swagger-ui.html` when the application is running. Use the **Authorize** button to authenticate with HTTP Basic credentials.
 
 ## Security
-The API is secured with HTTP Basic authentication (in-memory user). JWT/OIDC support is a planned future addition.
+The API is secured with HTTP Basic authentication (in-memory user) using a
+`DelegatingPasswordEncoder` (`{noop}`, `{bcrypt}`, …). JWT/OIDC support is a planned future addition.
 
 ## Contribution Guidelines
 1. Fork the repository
