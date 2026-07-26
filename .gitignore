@@ -34,6 +34,10 @@ bin/
 *.ear
 hs_err_pid*
 
+# Local detached backend (scripts/restart-local.sh)
+.local-backend.pid
+.local-backend.log
+
 # Environment files
 .env
 .env.local
