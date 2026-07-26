@@ -103,3 +103,12 @@ All ECCN business outputs are decision support, not legal advice or final export
 - `eccn-spring-ai-chatclient`: `.gemini/skills/eccn-spring-ai-chatclient/SKILL.md` (ChatClient.Builder, prompts, structured outputs).
 - `eccn-spring-ai-function-calling`: `.gemini/skills/eccn-spring-ai-function-calling/SKILL.md` (@Bean tools, EccnTools, function calling).
 - `eccn-spring-ai-council-orchestration`: `.gemini/skills/eccn-spring-ai-council-orchestration/SKILL.md` (Multi-LLM deliberation, CouncilOrchestrator).
+
+## Learned User Preferences
+
+- Prefer Conventional Commits when asked to commit; do not stage machine-local files such as `.mcp.json`, `.cursor/` hook state, or `.env`.
+
+## Learned Workspace Facts
+
+- If GitNexus incremental `analyze` fails (Kuzu FTS or `.gitnexus/lbug` I/O corruption), recover with `node .gitnexus/run.cjs clean --force` then `node .gitnexus/run.cjs analyze --force`.
+- `.mcp.json` may contain machine-specific absolute `gitnexus` paths; keep it untracked.
