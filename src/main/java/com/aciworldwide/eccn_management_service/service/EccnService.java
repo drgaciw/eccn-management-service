@@ -41,9 +41,12 @@ public class EccnService {
         try {
             return eccnRepository.save(eccn);
         } catch (DuplicateKeyException e) {
+            // A duplicate commodityCode is a data-integrity conflict (HTTP 409), not a
+            // validation failure (HTTP 400) — see GlobalExceptionHandler.determineHttpStatus.
             throw new EccnValidationException(
                 "ECCN with this commodity code already exists: " + eccn.getCommodityCode(),
-                EccnException.ErrorCodes.DUPLICATE_CODE
+                EccnException.ErrorCodes.DUPLICATE_CODE,
+                EccnException.ErrorCategory.DATA_INTEGRITY
             );
         }
     }
