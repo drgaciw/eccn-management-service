@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **eccn-management-service** (1818 symbols, 3434 relationships, 142 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **eccn-management-service** (2003 symbols, 3843 relationships, 168 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -47,7 +47,6 @@ This project is indexed by GitNexus as **eccn-management-service** (1818 symbols
 
 ## Project Stack
 
-- Java 21, Maven Wrapper, Spring Boot 4.0.7, Spring MVC, Spring Data MongoDB, MongoDB, Spring Security, Springdoc OpenAPI, Actuator, Resilience4j, Lombok, Docker/Compose, Postman/Newman.
 - Use `tech-stack.md` as the local stack inventory and verify claims against source/config before acting.
 - The concrete runtime is currently one Spring Boot API plus MongoDB. Postman includes target multi-service/auth flows that are not fully implemented locally.
 
@@ -68,14 +67,13 @@ This project is indexed by GitNexus as **eccn-management-service** (1818 symbols
 
 ## Known Project Drift / Risks
 
-- README says Java 17+, MockMvc, and GitHub Actions; `pom.xml`/Docker use Java 21, no MockMvc usage or `.github/workflows` were found.
+- README says Java 17+ and MockMvc; `pom.xml`/Docker use Java 21 and no MockMvc usage was found.
 - Docker build skips tests.
 - `application.properties` contains local default credentials and exposes all actuator endpoints/health details.
-- CORS omits PATCH while Product API uses PATCH.
 - Existing `.kilocodemodes` had stale TypeScript/actor-system language; use ECCN-specific modes instead.
 
-## ECCN Business Capability Agents
+## ECCN Business Guardrails
 
-Use these project agents/skills for PRD business processes: `eccn-record-management-capability`, `eccn-product-classification-capability`, `eccn-crypto-classification-capability`, `eccn-glossary-capability`, `eccn-compliance-documentation-capability`, `eccn-risk-assessment-capability`, `eccn-export-control-capability`, `eccn-classification-workflow-capability`, `eccn-automated-classification-capability`, and `eccn-enterprise-integration-capability`.
+Use the `eccn-*-capability` agents in `.claude/agents/` for PRD business processes.
 
 All ECCN business outputs are decision support, not legal advice or final export-control determinations. Require named human compliance approval before final ECCN decisions, `CLASSIFIED` status, compliance approval, report issuance, document archival/deletion, external publication, or high-risk mitigation closure.
