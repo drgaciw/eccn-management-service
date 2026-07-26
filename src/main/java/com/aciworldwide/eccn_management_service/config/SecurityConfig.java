@@ -24,6 +24,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // Integrate Spring MVC CORS (WebConfig) into the security filter chain so
+            // OPTIONS preflight receives Access-Control-* headers instead of a 401
+            // Basic challenge. Without this, browser POST/PUT/DELETE from the Angular
+            // dev server fails with "Invalid CORS request" / blocked preflight.
+            .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .httpBasic(Customizer.withDefaults())

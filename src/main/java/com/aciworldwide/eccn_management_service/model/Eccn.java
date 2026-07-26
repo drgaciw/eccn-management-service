@@ -1,5 +1,6 @@
 package com.aciworldwide.eccn_management_service.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -59,6 +60,7 @@ public class Eccn {
     
     @Indexed(unique = true)
     @Schema(description = "Commodity code")
+    @JsonAlias({"eccnCode", "eccn_code"})
     private String commodityCode;
     
     @Schema(description = "Flag indicating if this ECCN is encryption related")

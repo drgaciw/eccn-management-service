@@ -12,7 +12,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import com.aciworldwide.eccn_management_service.config.MongoDBTestConfig;
 
 import java.util.Arrays;
 
@@ -29,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(MongoDBTestConfig.class)
 class EccnDuplicateKeyTest {
 
     @Autowired

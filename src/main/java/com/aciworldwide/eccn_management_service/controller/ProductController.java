@@ -17,6 +17,28 @@ public class ProductController {
 
     private final ProductService productService;
 
+    /**
+     * List all products. Required by the Angular {@code ProductListComponent}, which
+     * loads the catalog via {@code GET /api/products}. Without this mapping the
+     * backend returns {@code 405 Method Not Allowed} and the UI falls back to
+     * sample data.
+     */
+    @GetMapping
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    /**
+     * Fetch a single product by id. SIT found clients (and the UI "View" action)
+     * calling {@code GET /api/products/{id}} and receiving 405.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getProductById(@PathVariable String id) {
+        return productService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
         Product created = productService.createProduct(product);
@@ -29,6 +51,18 @@ public class ProductController {
             @Valid @RequestBody Product product) {
         Product updated = productService.updateProduct(id, product);
         return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * Delete a product by id. SIT observed 405 Method Not Allowed for DELETE.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
+        if (productService.findById(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        productService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/status/{status}")

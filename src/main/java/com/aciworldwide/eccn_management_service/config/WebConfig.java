@@ -25,7 +25,14 @@ public class WebConfig implements WebMvcConfigurer {
                 // request" before Spring Security or the controller ever ran, while GET
                 // requests (which browsers don't tag with Origin) kept working — the
                 // asymmetry that made this easy to miss.
-                .allowedOrigins("http://localhost:3000", "http://localhost:4200", "http://eccn-management-ui:3000")
+                // Include both localhost and 127.0.0.1 — browsers treat them as distinct
+                // Origins. Playwright UAT and some developers hit the UI via 127.0.0.1:4200.
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "http://localhost:4200",
+                        "http://127.0.0.1:3000",
+                        "http://127.0.0.1:4200",
+                        "http://eccn-management-ui:3000")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
