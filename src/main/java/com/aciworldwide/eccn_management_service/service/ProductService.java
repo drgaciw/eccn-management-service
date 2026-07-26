@@ -25,10 +25,15 @@ public class ProductService {
 
     @Transactional
     public Product createProduct(Product product) {
-        // Set initial status and classification status for versions.
+        // Default status/classification status for versions, but only when the caller
+        // didn't supply one. UAT3: POSTing a product with an explicit status (e.g.
+        // "DEPRECATED") was silently forced to "ACTIVE" because this unconditionally
+        // overwrote whatever the caller sent — the status never persisted as supplied.
         // The Angular create form does not send a versions array — tolerate null/empty
         // so create does not NPE into a generic 500 for the UI.
-        product.setStatus("ACTIVE");
+        if (product.getStatus() == null || product.getStatus().isBlank()) {
+            product.setStatus("ACTIVE");
+        }
         if (product.getVersions() == null) {
             product.setVersions(java.util.Collections.emptyList());
         } else {
