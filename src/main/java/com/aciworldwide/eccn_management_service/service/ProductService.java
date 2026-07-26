@@ -77,6 +77,25 @@ public class ProductService {
     /**
      * Returns every product. Used by the Angular product list (GET /api/products).
      */
+    /**
+     * Distinct, non-blank product categories currently present in the data,
+     * sorted for a stable dropdown order.
+     * <p>
+     * Deliberately derived from stored products rather than a fixed enum: the UI
+     * should only offer categories that products actually use. Returns an empty
+     * list when nothing is categorised, which lets the client fall back to its
+     * own options instead of rendering an empty select.
+     */
+    public List<String> getDistinctCategories() {
+        return productRepository.findAll().stream()
+                .map(Product::getCategory)
+                .filter(c -> c != null && !c.isBlank())
+                .map(String::trim)
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }

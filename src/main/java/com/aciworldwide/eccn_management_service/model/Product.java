@@ -20,6 +20,12 @@ public class Product {
     @Indexed(unique = true)
     private String name;
     private String description;
+    /**
+     * Optional product grouping (e.g. "Cryptography", "Networking"). Nullable:
+     * documents written before this field existed read back null, and the
+     * /categories lookup skips null/blank values rather than offering them.
+     */
+    private String category;
     private List<String> features;
     private List<VersionRelease> versions;
     private String status; // ACTIVE, DEPRECATED, etc.
