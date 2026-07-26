@@ -67,7 +67,7 @@ This project is indexed by GitNexus as **eccn-management-service** (2003 symbols
 
 ## Known Project Drift / Risks
 
-- README says Java 17+, MockMvc, and GitHub Actions; `pom.xml`/Docker use Java 21, no MockMvc usage or `.github/workflows` were found.
+- README says Java 17+ and MockMvc; `pom.xml`/Docker use Java 21 and no MockMvc usage was found.
 - Docker build skips tests.
 - `application.properties` contains local default credentials and exposes all actuator endpoints/health details.
 - Existing `.kilocodemodes` had stale TypeScript/actor-system language; use ECCN-specific modes instead.
